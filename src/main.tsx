@@ -8,6 +8,9 @@ import { App } from './components/App'
 import './mockEnv.ts'
 import { init } from './Init.ts'
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+const client = new QueryClient()
+
 const root = createRoot(document.getElementById('root')!)
 
 try {
@@ -28,7 +31,9 @@ try {
   }).then(() => {
     root.render(
       <StrictMode>
-        <App/>
+        <QueryClientProvider client={client}>
+          <App />
+        </QueryClientProvider>
       </StrictMode>,
     );
   })

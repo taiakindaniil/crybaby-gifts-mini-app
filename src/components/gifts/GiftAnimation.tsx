@@ -1,7 +1,8 @@
 import Lottie from 'lottie-react'
-import type { FC } from 'react'
-import { useState, useEffect } from 'react'
-import type { Gift } from '@/types/Gift'
+import { useEffect, type FC } from 'react'
+import type { Gift } from '@/types/gift'
+import { getLottieURL } from '@/types/gift'
+import { useQuery } from '@tanstack/react-query'
 
 type GiftAnimationProps = {
     gift: Gift
@@ -9,37 +10,32 @@ type GiftAnimationProps = {
 }
 
 export const GiftAnimation: FC<GiftAnimationProps> = ({ gift, className }) => {
-    const [animationData, setAnimationData] = useState<unknown | null>(null)
+    const lottieURL = getLottieURL(gift)
+
+    const { data: animationData } = useQuery({
+        queryKey: ['lottie', lottieURL],
+        enabled: !!lottieURL,
+        queryFn: async () => {
+            const res = await fetch(lottieURL!)
+            if (!res.ok) throw new Error('Failed to load lottie')
+            return res.json()
+        },
+        staleTime: Infinity, // кеш всегда свежий
+        // cacheTime: Infinity, // не удалять из кеша
+        retry: 1,
+    })
 
     useEffect(() => {
-        let isMounted = true
-        if (!gift.lottieUrl) {
-            setAnimationData(null)
-            return
-        }
+        
+    }, [animationData])
 
-        const controller = new AbortController()
+    if (!animationData) return <span className={className}></span>
 
-        ;(async () => {
-            try {
-                const res = await fetch(gift.lottieUrl!, { signal: controller.signal })
-                if (!res.ok) return
-                const json = await res.json()
-                if (isMounted) {
-                    setAnimationData(json)
-                }
-            } catch {
-                if (isMounted) setAnimationData(null)
-            }
-        })()
-
-        return () => {
-            isMounted = false
-            controller.abort()
-        }
-    }, [gift.lottieUrl])
-
-    if (!animationData) return <span className={className}>{gift.icon}</span>
-
-    return <Lottie animationData={animationData} loop={false} className={className} />
+    return (
+        <Lottie
+            animationData={animationData}
+            loop={false}
+            className={className}
+        />
+    )
 }

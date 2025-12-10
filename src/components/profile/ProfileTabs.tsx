@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { GiftGrid } from '../gifts/GiftGrid'
 import { useGiftStore } from '@/stores/giftStore'
-import type { Gift } from '@/types/Gift'
+import type { Gift } from '@/types/gift'
 
 export default function ProfileTabs() {
     const setSelectedGift = useGiftStore((state) => state.setSelectedGift)
@@ -28,10 +28,8 @@ export default function ProfileTabs() {
     const gifts: Gift[] = [
         {
           id: 9220,
-          icon: '🌸',
-          title: 'Blooming Skull',
-          description: 'A rare gothic flower gift from your subscribers.',
-          lottieUrl: 'https://cdn.changes.tg/gifts/models/Bling%20Binky/lottie/Original.json', // TODO: set real Lottie JSON URL
+          name: 'Plush Pepe',
+          pattern: 'Cap',
           background: {
             name: "Electric Purple",
             backdropId: 1,
@@ -49,10 +47,9 @@ export default function ProfileTabs() {
         },
         {
           id: 94355,
-          icon: '🍭',
-          title: 'Plush Pepe',
-          description: 'Sweet and hypnotic, perfect for loyal fans.',
-          lottieUrl: 'https://cdn.changes.tg/gifts/models/Plush%20Pepe/lottie/Donatello.json',
+          name: 'Plush Pepe',
+          model: 'Donatello',
+          pattern: 'High Heels',
           background: {
             "name": "Mustard",
             "backdropId": 78,
@@ -70,10 +67,8 @@ export default function ProfileTabs() {
         },
         {
           id: 19795,
-          icon: '👁️',
-          title: 'All‑seeing Eye',
-          description: 'Keeps an eye on your channel stats.',
-          lottieUrl: 'https://cdn.changes.tg/gifts/models/Plush%20Pepe/lottie/Original.json',
+          name: 'Plush Pepe',
+          pattern: 'Sakura',
           background: {
             "name": "Cyberpunk",
             "backdropId": 3,
@@ -91,10 +86,7 @@ export default function ProfileTabs() {
         },
         {
           id: 16876,
-          icon: '🎩',
-          title: 'Wizard Hat',
-          description: 'Adds a bit of magic to your profile.',
-          lottieUrl: 'https://cdn.changes.tg/gifts/models/Plush%20Pepe/lottie/Pepemint.json',
+          name: 'Plush Pepe',
           background: {
             "name": "Mint Green",
             "backdropId": 14,
@@ -112,10 +104,8 @@ export default function ProfileTabs() {
         },
         {
           id: 5682,
-          icon: '💗',
-          title: 'Love Potion',
-          description: 'For the most devoted subscribers.',
-          lottieUrl: 'https://cdn.changes.tg/gifts/models/Plush%20Pepe/lottie/Sunset.json',
+          name: 'Love Potion',
+          model: 'Original',
           background: {
             "name": "Feldgrau",
             "backdropId": 68,
@@ -133,10 +123,8 @@ export default function ProfileTabs() {
         },
         {
           id: 19529,
-          icon: '🍪',
-          title: 'Gingerbread',
-          description: 'A cozy seasonal gift.',
-          lottieUrl: 'https://cdn.changes.tg/gifts/models/Plush%20Pepe/lottie/Princess.json',
+          name: 'Plush Pepe',
+          model: 'Princess',
           background: {
             "name": "Feldgrau",
             "backdropId": 68,
@@ -154,10 +142,8 @@ export default function ProfileTabs() {
         },
         {
           id: 12345,
-          icon: '🧸',
-          title: 'Teddy Bear',
-          description: 'A classic cute gift.',
-          lottieUrl: 'https://cdn.changes.tg/gifts/models/Plush%20Pepe/lottie/Christmas.json',
+          name: 'Plush Pepe',
+          model: 'Christmas',
           background: {
             "name": "Mexican Pink",
             "backdropId": 71,
@@ -175,10 +161,8 @@ export default function ProfileTabs() {
         },
         {
           id: 12346,
-          icon: '💝',
-          title: 'Heart Box',
-          description: 'A premium gift with love.',
-          lottieUrl: 'https://cdn.changes.tg/gifts/models/Plush%20Pepe/lottie/Emo Boi.json',
+          name: 'Plush Pepe',
+          model: 'Emo Boi',
           background: {
             "name": "Gunmetal",
             "backdropId": 69,
@@ -196,10 +180,8 @@ export default function ProfileTabs() {
         },
         {
           id: 12347,
-          icon: '🧸',
-          title: 'Golden Teddy',
-          description: 'A legendary collectible gift.',
-          lottieUrl: 'https://cdn.changes.tg/gifts/models/Plush%20Pepe/lottie/Cozy Galaxy.json',
+          name: 'Plush Pepe',
+          model: 'Cozy Galaxy',
           background: {
             "name": "Pistachio",
             "backdropId": 36,

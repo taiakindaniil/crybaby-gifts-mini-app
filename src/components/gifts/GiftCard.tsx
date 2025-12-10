@@ -1,6 +1,7 @@
 import type { FC } from 'react'
 import { GiftAnimation } from './GiftAnimation'
-import type { Gift } from '@/types/Gift'
+import type { Gift } from '@/types/gift'
+import { PatternBackground } from './PatternBackground'
 
 type Props = {
   gift: Gift
@@ -16,6 +17,10 @@ export const GiftCard: FC<Props> = ({ gift, onClick }) => {
       }}
       onClick={onClick}
     >
+      {gift.pattern && <PatternBackground
+        image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.pattern)}.png`}
+      /> }
+
       <div className="absolute inset-0 opacity-[0.03]">
         <div className="grid grid-cols-3 gap-0.5 p-1">
           {Array.from({ length: 9 }).map((_, i) => (

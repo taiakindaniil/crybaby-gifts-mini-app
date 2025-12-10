@@ -1,6 +1,6 @@
 import type { FC } from 'react'
 import { GiftCard } from "./GiftCard";
-import type { Gift } from '@/types/Gift';
+import type { Gift } from '@/types/gift';
 
 type GiftGridProps = {
   gifts?: Gift[]
