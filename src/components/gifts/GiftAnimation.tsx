@@ -7,9 +7,10 @@ import { useQuery } from '@tanstack/react-query'
 type GiftAnimationProps = {
     gift: Gift
     className?: string
+    autoplay?: boolean
 }
 
-export const GiftAnimation: FC<GiftAnimationProps> = ({ gift, className }) => {
+export const GiftAnimation: FC<GiftAnimationProps> = ({ gift, className, autoplay }) => {
     const lottieURL = getLottieURL(gift)
 
     const { data: animationData } = useQuery({
@@ -36,6 +37,7 @@ export const GiftAnimation: FC<GiftAnimationProps> = ({ gift, className }) => {
             animationData={animationData}
             loop={false}
             className={className}
+            autoPlay={autoplay}
         />
     )
 }

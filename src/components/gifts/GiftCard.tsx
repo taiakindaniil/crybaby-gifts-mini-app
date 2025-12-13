@@ -36,7 +36,7 @@ export const GiftCard: FC<Props> = ({ gift, onClick }) => {
         </div>
 
         <div className="relative z-10 flex items-center justify-center text-3xl">
-          <GiftAnimation gift={gift} className="w-2/3 h-full/2" />
+          <GiftAnimation gift={gift} autoplay={false} className="w-2/3 h-full/2" />
         </div>
       </> || <>
         <><Plus className="text-foreground/60" /></>
