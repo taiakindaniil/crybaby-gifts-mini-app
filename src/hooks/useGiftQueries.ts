@@ -8,7 +8,9 @@ export const useGifts = () => {
     queryFn: async () => {
         const res = await api.get('/proxy/changes-tg/gifts');
         return res.data;
-  }})
+    },
+    staleTime: 1000 * 60 * 60 * 24,
+  })
 }
 
 export const useModels = (giftName: string) => {
@@ -18,7 +20,8 @@ export const useModels = (giftName: string) => {
     queryFn: async () => {
         const res = await api.get(`/proxy/changes-tg/models/${encodeURIComponent(giftName)}`);
         return res.data;
-    }
+    },
+    staleTime: 1000 * 60 * 60 * 24,
   })
 }
 
@@ -29,7 +32,8 @@ export const useBackgrounds = () => {
     queryFn: async () => {
         const res = await api.get('/proxy/changes-tg/backdrops?sort=asc');
         return res.data;
-    }
+    },
+    staleTime: 1000 * 60 * 60 * 24,
   })
 }
 
@@ -40,6 +44,7 @@ export const usePatterns = (giftName: string) => {
     queryFn: async () => {
         const res = await api.get(`/proxy/changes-tg/patterns/${encodeURIComponent(giftName)}`);
         return res.data;
-    }
+    },
+    staleTime: 1000 * 60 * 60 * 24,
   })
 }
