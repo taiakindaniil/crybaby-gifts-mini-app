@@ -38,6 +38,7 @@ export const GiftAnimation: FC<GiftAnimationProps> = ({ gift, className, autopla
             loop={false}
             className={className}
             autoPlay={autoplay}
+            initialSegment={(autoplay == false && [1, 1] || undefined)}
         />
     )
 }

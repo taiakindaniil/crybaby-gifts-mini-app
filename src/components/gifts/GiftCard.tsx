@@ -36,7 +36,8 @@ export const GiftCard: FC<Props> = ({ gift, onClick }) => {
         </div>
 
         <div className="relative z-10 flex items-center justify-center text-3xl">
-          <GiftAnimation gift={gift} autoplay={false} className="w-2/3 h-full/2" />
+          <img src={`https://cdn.changes.tg/gifts/models/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.model || 'Original')}.png`} className="w-2/3 h-full/2" />
+          {/* <GiftAnimation gift={gift} autoplay={false} className="w-2/3 h-full/2" /> */}
         </div>
       </> || <>
         <><Plus className="text-foreground/60" /></>
