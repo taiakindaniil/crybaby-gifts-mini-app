@@ -8,140 +8,162 @@ import {
 import { Button } from '@/components/ui/button'
 import { GiftAnimation } from './GiftAnimation'
 
-import { useGiftDataStore } from '@/stores/giftDataStore'
-import type { GiftBackground } from '@/types/gift'
+// import { useGiftDataStore } from '@/stores/giftDataStore'
+import type { Gift, GiftBackground } from '@/types/gift'
 import { useGiftStore, giftFields } from '@/stores/giftStore'
 import { SearchDrawer } from '../search/SearchDrawer'
 import { PatternBackground } from './PatternBackground'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { updateGiftCell } from '@/api/gifts'
+import { toast } from 'sonner'
+import { Spinner } from '../ui/spinner'
+import { useBackgrounds, useGifts } from '@/hooks/useGiftQueries'
+import { fetchModels, fetchPatterns } from '@/api/changes'
 
 
 export const GiftDrawer: FC = () => {
-  const selectedGift = useGiftStore((state) => state.selectedGift)
-  const setSelectedGift = useGiftStore((state) => state.setSelectedGift)
+  const selectedCell = useGiftStore((state) => state.selectedCell)
+  const setSelectedCell = useGiftStore((state) => state.setSelectedCell)
 
   const editingFieldKey = useGiftStore((state) => state.editingFieldKey)
   const setEditingFieldKey = useGiftStore((state) => state.setEditingFieldKey)
 
+  const selectField = useGiftStore((s) => s.selectField)
+
   const [drawerItems, setDrawerItems] = useState<{ id: number, title: string, image?: string, background?: GiftBackground }[]>([])
 
-  const prefetchStatic = useGiftDataStore().prefetchStatic
+  const { data: gifts, isLoading: giftsLoading } = useGifts()
+  const { data: backgrounds, isLoading: backgroundLoading } = useBackgrounds()
 
-  // API store
-  // const {
-  //   gifts,
-  //   backgrounds,
-  //   models,
-  //   fetchBackgrounds,
-  //   fetchModels,
-  //   fetchGifts,
-  //   prefetchStatic,
-  // } = useGiftDataStore()
+  // Динамические запросы для моделей и паттернов через React Query
+  const fetchModelsQuery = async () => {
+    if (!selectedCell?.gift?.name) return []
+    const data = await fetchModels(selectedCell.gift.name)
+    return data
+  }
 
-  const selectField = useGiftStore((s) => s.selectField)
+  const fetchPatternsQuery = async () => {
+    if (!selectedCell?.gift?.name) return []
+    const data = await fetchPatterns(selectedCell.gift.name)
+    return data
+  }
+
 
   const handleSelect = (item) => {
     if (!editingFieldKey) return
-    selectField(editingFieldKey, item.title)
+
+    if (editingFieldKey === 'background') {
+      selectField(editingFieldKey, item.title, { background: item.background })
+    } else {
+      selectField(editingFieldKey, item.title)
+    }
+
     setEditingFieldKey(null)
     setDrawerItems([])
   }
 
-  const apiMap = {
-    gifts: async () => {
-      const store = useGiftDataStore.getState()
-  
-      await store.fetchGifts()
-      const fresh = useGiftDataStore.getState().gifts
-  
-      return (fresh ?? []).map((g, id) => ({ id, title: g, image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(g)}/png/Original.png` }))
-    },
-  
-    model: async (giftName: string) => {
-      const store = useGiftDataStore.getState()
-  
-      await store.fetchModels(giftName)
-      const fresh = useGiftDataStore.getState().models[giftName]
-  
-      return (fresh ?? []).map((m, id) => ({ id, title: m.name, image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(giftName)}/png/${encodeURIComponent(m.name)}.png` }))
-    },
-  
-    background: async () => {
-      const store = useGiftDataStore.getState()
-  
-      await store.fetchBackgrounds()
-      const fresh = useGiftDataStore.getState().backgrounds
-  
-      return (fresh ?? []).map((b) => ({
-        id: b.backdropId,
-        title: b.name,
-        background: b,
-      }))
-    },
-  
-    pattern: async (giftName: string) => {
-      const fetchPatterns = useGiftDataStore.getState().fetchPatterns
-
-      await fetchPatterns(giftName)
-
-      const fresh = useGiftDataStore.getState().patterns
-      return (fresh ?? []).map((p, id) => ({
-        id: id,
-        title: p.name,
-        pattern: `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(giftName)}/png/${encodeURIComponent(p.name)}.png`,
-      }))
-    },
-  }
-
-  useEffect(() => {
-    if (selectedGift) {
-      prefetchStatic()  // ⬅️ грузим gifts + backgrounds заранее
-    }
-  }, [selectedGift])
-
-  // Когда пользователь открывает поле — загружаем данные
+  // Когда открывается поле — грузим нужные элементы
   useEffect(() => {
     if (!editingFieldKey) return
-  
-    const load = async () => {
-      const loader = apiMap[editingFieldKey]
-      if (!loader) return
-  
-      let items = []
-      if (editingFieldKey === "model" && selectedGift) {
-        items = await loader(selectedGift.name)
-      } else if (editingFieldKey === "pattern" && selectedGift) {
-        items = await loader(selectedGift.name)
-      } else {
-        items = await loader()
+
+    const loadItems = async () => {
+      let items: any[] = []
+
+      if (editingFieldKey === 'gifts') {
+        items = gifts.map((g: string, id: number) => ({
+          id,
+          title: g,
+          image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(g)}/png/Original.png`,
+        }))
+      } else if (editingFieldKey === 'model' && selectedCell?.gift?.name) {
+        const data = await fetchModelsQuery()
+        items = data.map((m: any, id: number) => ({
+          id,
+          title: m.name,
+          image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(m.name)}.png`,
+        }))
+      } else if (editingFieldKey === 'background') {
+        items = backgrounds.map((b: any) => ({
+          id: b.backdropId,
+          title: b.name,
+          background: b,
+        }))
+        console.log(items)
+      } else if (editingFieldKey === 'pattern' && selectedCell?.gift?.name) {
+        const data = await fetchPatternsQuery()
+        items = data.map((p: any, id: number) => ({
+          id,
+          title: p.name,
+          pattern: `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(p.name)}.png`,
+        }))
       }
-  
+
       setDrawerItems(items)
     }
+
+    loadItems()
+  }, [editingFieldKey, selectedCell, gifts, backgrounds])
+
+  // Когда пользователь открывает поле — загружаем данные
+  // useEffect(() => {
+  //   if (!editingFieldKey) return
   
-    load()
-  }, [editingFieldKey, selectedGift])
+  //   const load = async () => {
+  //     const loader = apiMap[editingFieldKey]
+  //     if (!loader) return
   
+  //     let items = []
+  //     if (editingFieldKey === "model" && selectedCell?.gift) {
+  //       items = await loader(selectedCell?.gift?.name)
+  //     } else if (editingFieldKey === "pattern" && selectedCell?.gift) {
+  //       items = await loader(selectedCell?.gift?.name)
+  //     } else {
+  //       items = await loader()
+  //     }
+  
+  //     setDrawerItems(items)
+  //   }
+  
+  //   load()
+  // }, [editingFieldKey, selectedCell, gifts, backgrounds])
+  
+
+
+  const queryClient = useQueryClient();
+
+  const updateGiftMutation = useMutation({
+    mutationFn: () => updateGiftCell(selectedCell?.gridId, selectedCell?.rowIndex, selectedCell?.cellIndex, selectedCell?.gift),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['grids'] })
+      setSelectedCell(null)
+    },
+    onError: () => {
+      toast("Error", {
+        description: 'Failed to update gift',
+      })
+    },
+  })
 
   return (
     <Drawer
-      open={!!selectedGift}
+      open={!!selectedCell}
       onOpenChange={(open) => {
         if (!open) {
-          setSelectedGift(null)
+          setSelectedCell(null)
         }
       }}
     >
-      <DrawerContent className="z-1000 h-screen rounded-none [&>div:first-child]:hidden">
-        {selectedGift && (
-          <div className="flex w-full h-full flex-col gap-3 pb-6 bg-[#111111] text-white overflow-y-auto">
+      <DrawerContent className="z-1000 h-screen rounded-none bg-transparent border-none [&>div:first-child]:hidden">
+        {(selectedCell !== undefined) && (
+          <div className="flex w-full h-full flex-col gap-3 pb-6 bg-background rounded-t-3xl text-white overflow-y-auto">
             <div
-              className="relative min-h-[200px] rounded-t-3xl text-white overflow-hidden"
+              className="relative min-h-[200px] text-white overflow-hidden bg-muted"
               style={{
-                background: `radial-gradient(circle, ${selectedGift.background?.hex.centerColor} 0%, ${selectedGift.background?.hex.edgeColor} 100%)`
+                background: `radial-gradient(circle, ${selectedCell?.gift?.background?.hex.centerColor} 0%, ${selectedCell?.gift?.background?.hex.edgeColor} 100%)`
               }}
             >
-              {selectedGift.pattern && <PatternBackground
-                  image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedGift.name)}/png/${encodeURIComponent(selectedGift.pattern)}.png`}
+              {selectedCell?.gift?.pattern && <PatternBackground
+                  image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell?.gift?.name)}/png/${encodeURIComponent(selectedCell?.gift?.pattern)}.png`}
                 />
               }
 
@@ -153,14 +175,14 @@ export const GiftDrawer: FC = () => {
 
               <div className="relative h-full z-10 flex items-center justify-center">
                 <div className="h-4/5 w-full max-w-xs rounded-3xl flex items-center justify-center overflow-hidden">
-                  <GiftAnimation gift={selectedGift} className="h-full" />
+                  {selectedCell?.gift && <GiftAnimation gift={selectedCell.gift} className="h-full" />}
                 </div>
               </div>
             </div>
 
-            <div className="rounded-t-3xl bg-[#111111] text-white">
+            <div>
 
-              <div className="mx-4 divide-y divide-border rounded-xl border border-solid border-secondary-600 overflow-hidden">
+              <div className="bg-card/50 mx-4 divide-y divide-border rounded-xl border border-solid border-border-600 overflow-hidden">
                 {
                   giftFields.map((field, i) => (
                     <button
@@ -168,17 +190,17 @@ export const GiftDrawer: FC = () => {
                       className="flex w-full items-center justify-between text-left"
                       onClick={() => setEditingFieldKey(field.key)}
                     >
-                      <span className="flex-1 pl-3 py-3 bg-secondary text-sm text-white/90">
+                      <span className="flex-1 pl-3 py-3 bg-card text-sm text-card-foreground/90">
                         {field.label}
                       </span>
                       <div className="flex flex-2 px-5 py-3 justify-between items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {field.key === 'gifts' ? <>{selectedGift?.name ?? "All"}</> : null}
-                          {field.key === 'model' ? <>{selectedGift?.model ?? "All"}</> : null}
-                          {field.key === 'background' ? <>{selectedGift.background?.name ?? "All"}</> : null}
-                          {field.key === 'pattern' ? <>{selectedGift?.pattern ?? "All"}</> : null}
+                        <span className="text-sm font-medium text-foreground">
+                          {field.key === 'gifts' ? <>{selectedCell?.gift?.name ?? "All"}</> : null}
+                          {field.key === 'model' ? <>{selectedCell?.gift?.model ?? "All"}</> : null}
+                          {field.key === 'background' ? <>{selectedCell?.gift?.background?.name ?? "All"}</> : null}
+                          {field.key === 'pattern' ? <>{selectedCell?.gift?.pattern ?? "All"}</> : null}
                         </span>
-                        <ChevronDown className="h-4 w-4 text-white/60" />
+                        <ChevronDown className="h-4 w-4 text-foreground/60" />
                       </div>
                     </button>
                   ))
@@ -188,9 +210,10 @@ export const GiftDrawer: FC = () => {
               <DrawerFooter className="px-4 pb-4">
                 <Button
                   size="default"
-                  className="h-11 w-full rounded-full text-foreground font-semibold"
+                  className="h-11 w-full rounded-full text-white font-semibold"
+                  onClick={() => updateGiftMutation.mutate()}
                 >
-                  Apply
+                  {updateGiftMutation.isPending ? <Spinner /> : 'Apply'}
                 </Button>
               </DrawerFooter>
             </div>

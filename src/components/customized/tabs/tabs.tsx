@@ -70,8 +70,7 @@ export default function TabBar() {
     <Tabs
       value={location.pathname}
       onValueChange={handleChange}
-      className="fixed bottom-0 left-0 right-0 z-50 pt-3 pb-[calc(var(--tg-viewport-safe-area-inset-bottom)+5px)] backdrop-blur-md [&>div]:!bg-transparent [&>div[data-slot='tabs-list']]:!bg-transparent"
-      style={{ backgroundColor: 'transparent' }}
+      className="fixed bottom-0 left-0 right-0 z-50 pb-[calc(var(--tg-viewport-safe-area-inset-bottom)+5px)] backdrop-blur-md !bg-background/50 [&>div]:!bg-transparent [&>div[data-slot='tabs-list']]:!bg-transparent"
     >
       <TabsList 
         className="tabs-list-transparent h-14 w-full grid grid-cols-2 p-0 justify-start rounded-none"
@@ -80,7 +79,7 @@ export default function TabBar() {
           <TabsTrigger
             key={tab.path}
             value={tab.path}
-            className="!bg-transparent !data-[state=active]:bg-background/50 dark:!data-[state=active]:bg-background/50 flex flex-col gap-0 h-full rounded-none !shadow-none !data-[state=active]:shadow-none border-0 [&>svg]:h-6 [&>svg]:w-6 [&>svg]:shrink-0 text-muted-foreground data-[state=active]:text-primary backdrop-blur-sm"
+            className="!bg-transparent dark:!data-[state=active]:bg-background/50 flex flex-col gap-0 h-full rounded-none !shadow-none !data-[state=active]:shadow-none border-0 [&>svg]:h-6 [&>svg]:w-6 [&>svg]:shrink-0 text-muted-foreground data-[state=active]:text-primary"
           >
             <div className="h-6 w-6 flex items-center justify-center">
               {tab.icon}

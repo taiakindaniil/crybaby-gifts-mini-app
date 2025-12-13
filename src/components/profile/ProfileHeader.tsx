@@ -8,10 +8,7 @@ export const ProfileHeader: FC = ({ user }) => {
     const userInitials = user 
         ? `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase() || 'U'
         : 'U'
-    // const username = user?.username || ''
-    // const userLink = username ? `https://t.me/${username}` : (user?.id ? `https://t.me/user${user.id}` : '')
-    // const displayUsername = username ? `@${username}` : (user?.id ? `user${user.id}` : '')
-
+        
     return (
         <div className="flex flex-col items-center px-4 pt-6 pb-4">
             <div className="relative mb-4">

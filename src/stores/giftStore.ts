@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import type { Gift } from '@/types/gift'
-import { useGiftDataStore } from './giftDataStore'
+
+export interface SelectedCell {
+    gridId: number;
+    rowIndex: number;
+    cellIndex: number;
+    gift?: Gift | null;
+}
 
 export const giftFields = [
     { label: 'Gifts', key: 'gifts' },
@@ -12,34 +18,36 @@ export const giftFields = [
 export type GiftFieldKey = typeof giftFields[number]['key']
 
 type GiftStore = {
-    selectedGift: Gift | null
+    selectedCell: SelectedCell | null;
+    setSelectedCell: (cell: SelectedCell) => void;
+    clearSelectedCell: () => void;
 
     editingFieldKey: string | null
     setEditingFieldKey: (key: string | null) => void
 
-    setSelectedGift: (gift: Gift | null) => void
-    selectField: (key: keyof GiftFieldKey, value: string) => void
+    selectField: (key: keyof GiftFieldKey, value: string, extra?: any) => void
 }
 
 export const useGiftStore = create<GiftStore>((set, get) => ({
-    selectedGift: null,
+    selectedCell: null,
+    setSelectedCell: (cell) => set({ selectedCell: cell }),
+    clearSelectedCell: () => set({ selectedCell: null }),
 
     editingFieldKey: null,
     setEditingFieldKey: (key) => set(() => ({ editingFieldKey: key })),
   
-    setSelectedGift: (gift) => set(() => ({ selectedGift: gift })),
-  
-    selectField: (key, value) => {
+    selectField: (key, value, extra) => {
       const state = get()
       
-      let updatedGift = state.selectedGift
+      let updatedGift = state.selectedCell?.gift
 
       if (key.toString() === 'gifts') {
-        if (state.selectedGift) {
+        if (state.selectedCell?.gift) {
             updatedGift = {
-              ...state.selectedGift,
+              ...state.selectedCell.gift,
               name: value,
               model: undefined,
+              pattern: undefined,
             }
         } else {
             updatedGift = {
@@ -50,34 +58,35 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
       }
 
       // Если изменяем модель — обновляем selectedGift
-      if (state.selectedGift && key.toString() === 'model') {
+      if (state.selectedCell?.gift && key.toString() === 'model') {
         updatedGift = {
-          ...state.selectedGift,
-          model: value
+          ...state.selectedCell.gift,
+          model: value,
         }
       }
 
-      if (state.selectedGift && key.toString() === 'pattern') {
+      if (state.selectedCell?.gift && key.toString() === 'pattern') {
         updatedGift = {
-          ...state.selectedGift,
+          ...state.selectedCell.gift,
           pattern: value
         }
       }
   
       // Если фон — обновляем background
-      if (state.selectedGift && key.toString() === 'background') {
-        const backgrounds = useGiftDataStore.getState().backgrounds
-        const newBg = backgrounds?.find((b) => b.name === value)
-        if (newBg) {
-          updatedGift = {
-            ...state.selectedGift,
-            background: newBg,
-          }
+      if (state.selectedCell?.gift && key.toString() === 'background' && extra?.background) {
+        updatedGift = {
+          ...state.selectedCell.gift,
+          background: extra.background,
         }
+      }
+
+      const updatedCell = {
+        ...state.selectedCell,
+        gift: updatedGift
       }
   
       set({
-        selectedGift: updatedGift,
+        selectedCell: updatedCell,
       })
     },
 }))

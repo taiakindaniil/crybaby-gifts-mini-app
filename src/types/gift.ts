@@ -1,6 +1,10 @@
 export type GiftBackground = {
     name: string
     backdropId: number
+    centerColor: number,
+    edgeColor: number,
+    patternColor: number,
+    textColor: number,
     hex: {
         centerColor: string
         edgeColor: string

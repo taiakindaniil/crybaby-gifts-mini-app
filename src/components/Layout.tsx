@@ -1,6 +1,7 @@
 import { type PropsWithChildren } from 'react'
 // import ProfileCard from './customized/card/profileCard'
 import TabBar from '@/components/customized/tabs/tabs'
+import { Toaster } from 'sonner';
 
 export function Layout({ children }: PropsWithChildren) {
   return (
@@ -16,6 +17,7 @@ export function Layout({ children }: PropsWithChildren) {
         right: 0,
         zIndex: 1000
       }}>
+        <Toaster />
         <TabBar />
       </div>
     </div>
