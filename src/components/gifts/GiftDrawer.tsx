@@ -73,14 +73,14 @@ export const GiftDrawer: FC = () => {
         items = gifts.map((g: string, id: number) => ({
           id,
           title: g,
-          image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(g)}/png/Original.png`,
+          image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(g)}/png/Original.png`.replace(/'/g, "%27"),
         }))
       } else if (editingFieldKey === 'model' && selectedCell?.gift?.name) {
         const data = await fetchModelsQuery()
         items = data.map((m: any, id: number) => ({
           id,
           title: m.name,
-          image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(m.name)}.png`,
+          image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(m.name)}.png`.replace(/'/g, "%27"),
         }))
       } else if (editingFieldKey === 'background') {
         items = backgrounds.map((b: any) => ({
@@ -94,7 +94,7 @@ export const GiftDrawer: FC = () => {
         items = data.map((p: any, id: number) => ({
           id,
           title: p.name,
-          pattern: `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(p.name)}.png`,
+          pattern: `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(p.name)}.png`.replace(/'/g, "%27"),
         }))
       }
 
@@ -163,7 +163,7 @@ export const GiftDrawer: FC = () => {
               }}
             >
               {selectedCell?.gift?.pattern && <PatternBackground
-                  image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell?.gift?.name)}/png/${encodeURIComponent(selectedCell?.gift?.pattern)}.png`}
+                  image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell?.gift?.name)}/png/${encodeURIComponent(selectedCell?.gift?.pattern)}.png`.replace(/'/g, "%27")}
                 />
               }
 
