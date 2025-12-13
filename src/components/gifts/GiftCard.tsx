@@ -20,7 +20,7 @@ export const GiftCard: FC<Props> = ({ gift, onClick }) => {
     >
       {gift && <>
         {gift?.pattern && <PatternBackground
-          image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.pattern)}.png`}
+          image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.pattern)}.png`.replace(/'/g, "%27")}
         /> }
 
         <div className="absolute inset-0 opacity-[0.03]">
