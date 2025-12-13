@@ -86,9 +86,9 @@ export async function init(options: {
       .then(() => {
         expandViewport();
         bindViewportCssVars();
-        if (setMiniAppHeaderColor.isAvailable() && setMiniAppHeaderColor.supports.rgb()) {
-          setMiniAppHeaderColor('#000000');
-        }
+        // if (setMiniAppHeaderColor.isAvailable() && setMiniAppHeaderColor.supports.rgb()) {
+        //   setMiniAppHeaderColor('#000000');
+        // }
       })
   }
 }
