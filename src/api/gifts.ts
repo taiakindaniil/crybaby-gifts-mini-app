@@ -18,6 +18,11 @@ export const createGrid = async (name: string) => {
     return res.data
 }
 
+export const deleteGrid = async (id: number) => {
+    const res = await apiClient.delete(`/me/grids/${id}`)
+    return res.data
+}
+
 // GET все гриды с их строками и ячейками
 export const getGrids = async (userId: number): Promise<Grid[]> => {
     const { data } = await apiClient.get(`/users/${userId}/grids`); // пример user_id

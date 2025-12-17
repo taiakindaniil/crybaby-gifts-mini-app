@@ -6,6 +6,9 @@ import { retrieveLaunchParams } from '@telegram-apps/sdk-react'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileCard } from '@/components/profile/ProfileCard'
 import ProfileTabs from '@/components/profile/ProfileTabs'
+import { Button } from '@/components/ui/button'
+import { Settings } from "lucide-react"
+import { Link } from 'react-router-dom';
 
 export const IndexPage: FC = () => {
   const lp = useMemo(() => retrieveLaunchParams(), []);
@@ -13,13 +16,25 @@ export const IndexPage: FC = () => {
 
   return (
     <Page back={false}>
-      <div className="w-screen">
+      <div className="w-full">
+
+        <div className="flex mt-2">
+          <Button size="lg" variant="ghost" aria-label="settings" className="ml-auto mr-2">
+            <Link to="/settings">
+              <Settings className="size-5" />
+            </Link>
+          </Button>
+        </div>
 
         <ProfileHeader user={user} />
 
         <ProfileCard user={user} />
 
         <ProfileTabs user={user} />
+
+        <div className="py-5 text-foreground/50 text-center text-sm">
+          Big thanks to <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> for API
+        </div>
 
         <GiftDrawer />
       </div>

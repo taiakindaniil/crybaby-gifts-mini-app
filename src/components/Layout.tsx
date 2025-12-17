@@ -1,14 +1,14 @@
 import { type PropsWithChildren } from 'react'
-// import ProfileCard from './customized/card/profileCard'
 import TabBar from '@/components/customized/tabs/tabs'
 import { Toaster } from 'sonner';
 
 export function Layout({ children }: PropsWithChildren) {
   return (
     <div className="relative flex flex-col h-screen overflow-hidden">
-      <main className="flex flex-col items-center content-center overflow-y-auto overflow-x-hidden w-full h-full pb-20">
-        {/* <ProfileCard /> */}
-        {children}
+      <main className="flex flex-col items-center justify-items-center content-center overflow-y-auto overflow-x-hidden w-full h-full pb-20">
+        <div className="mx-auto w-full max-w-[600px]">
+          {children}
+        </div>
       </main>
       <div style={{
         position: 'fixed',

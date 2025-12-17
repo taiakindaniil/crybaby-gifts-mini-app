@@ -22,7 +22,7 @@ export const ProfileCard: FC = ({ user }) => {
     }
 
     return (
-        <Card className="py-3 mx-2 mb-4 bg-card/50 border-border/50">
+        <Card className="py-3 mx-2 mb-4 bg-card/50 border-border shadow-none">
             <CardContent className="px-3">
                 <div className="space-y-2">
                     {/* Share Link */}

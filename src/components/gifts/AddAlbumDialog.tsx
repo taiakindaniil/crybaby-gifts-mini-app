@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { createGrid } from '@/api/gifts'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { postEvent } from '@telegram-apps/sdk-react'
 
 type AddAlbumDialogProps = {
   open: boolean
@@ -44,7 +45,7 @@ export const AddAlbumDialog = ({ open, onOpenChange }: AddAlbumDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] bg-background/50 backdrop-blur-md ">
+      <DialogContent className="sm:max-w-[400px] bg-background/50 backdrop-blur-md rounded-3xl border-border">
         <DialogHeader>
           <DialogTitle>Create New Album</DialogTitle>
         </DialogHeader>
@@ -52,6 +53,7 @@ export const AddAlbumDialog = ({ open, onOpenChange }: AddAlbumDialogProps) => {
           placeholder="Album name"
           value={albumName}
           onChange={(e) => setAlbumName(e.target.value)}
+          className="rounded-xl py-5 border-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-card/30"
         />
         <DialogFooter>
           <Button onClick={onSubmit} disabled={mutation.isPending}>

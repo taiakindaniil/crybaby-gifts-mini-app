@@ -13,7 +13,7 @@ import {
   emitEvent,
   expandViewport,
   swipeBehavior,
-  setMiniAppHeaderColor,
+  // setMiniAppHeaderColor,
   themeParams,
   miniApp
 } from '@telegram-apps/sdk-react';

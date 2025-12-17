@@ -3,6 +3,8 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import type { GiftBackground } from "@/types/gift";
 import { Spinner } from "../ui/spinner";
+import { InputGroup, InputGroupAddon } from "../ui/input-group";
+import { Search } from "lucide-react";
 
 type Item = {
   id: string
@@ -35,12 +37,18 @@ export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, hand
           <DrawerTitle className="text-2xl text-left">{title}</DrawerTitle>
         </DrawerHeader>
 
-        <Input
-          placeholder="Search..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="py-6 mt-3 rounded-xl bg-card border-0 text-foreground"
-        />
+        <InputGroup className="py-6 mt-3 rounded-xl bg-card border-0 text-foreground">
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+          <Input
+            placeholder="Search..."
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="border-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+          />
+        </InputGroup>
 
         {items.length == 0 ? (
           <div className="w-full h-full flex justify-center items-center">

@@ -1,6 +1,6 @@
 import type { FC } from 'react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Check } from 'lucide-react'
+import { BadgeCheckIcon, Check } from 'lucide-react'
 
 export const ProfileHeader: FC = ({ user }) => {
     // Получаем данные пользователя
@@ -8,7 +8,7 @@ export const ProfileHeader: FC = ({ user }) => {
     const userInitials = user 
         ? `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase() || 'U'
         : 'U'
-        
+
     return (
         <div className="flex flex-col items-center px-4 pt-6 pb-4">
             <div className="relative mb-4">
@@ -23,8 +23,8 @@ export const ProfileHeader: FC = ({ user }) => {
             <div className="flex items-center gap-2 mb-1">
             <h1 className="text-xl font-semibold text-foreground">{userName}</h1>
             {user?.is_premium && (
-                <div className="flex items-center gap-1">
-                <Check className="w-4 h-4 text-blue-500" />
+                <div className="flex items-center">
+                <BadgeCheckIcon className="w-5 h-5 text-blue-500" />
                 </div>
             )}
             </div>
