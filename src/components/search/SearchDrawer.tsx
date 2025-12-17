@@ -63,7 +63,7 @@ export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, hand
                 onClick={() => handleSelect(item)}
               >
                 {item.image && <img width={44} height={44} src={item.image} />}
-                {item.pattern && <img width={44} height={44} src={item.pattern} className="brightness-0 invert box-border p-2" />}
+                {item.pattern && <img width={44} height={44} src={item.pattern} className="dark:brightness-0 dark:invert box-border p-2" />}
                 {item.background && (
                   <div
                     className="w-[44px] h-[44px] rounded-md text-white overflow-hidden"

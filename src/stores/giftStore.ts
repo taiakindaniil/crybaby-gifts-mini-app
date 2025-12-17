@@ -48,11 +48,15 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
               name: value,
               model: undefined,
               pattern: undefined,
+              background: undefined,
             }
         } else {
             updatedGift = {
                 id: 0,
-                name: value
+                name: value,
+                model: undefined,
+                pattern: undefined,
+                background: undefined,
             }
         }
       }
@@ -62,13 +66,8 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
         updatedGift = {
           ...state.selectedCell.gift,
           model: value,
-        }
-      }
-
-      if (state.selectedCell?.gift && key.toString() === 'pattern') {
-        updatedGift = {
-          ...state.selectedCell.gift,
-          pattern: value
+          background: undefined,
+          pattern: undefined,
         }
       }
   
@@ -77,6 +76,21 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
         updatedGift = {
           ...state.selectedCell.gift,
           background: extra.background,
+          pattern: undefined,
+        }
+      }
+
+      if (state.selectedCell?.gift && key.toString() === 'pattern') {
+        updatedGift = {
+          ...state.selectedCell.gift,
+          pattern: value,
+        }
+      }
+
+      if (state.selectedCell?.gift && key.toString() === 'id') {
+        updatedGift = {
+          ...state.selectedCell.gift,
+          id: Number(value),
         }
       }
 

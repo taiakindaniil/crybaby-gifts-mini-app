@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { GiftAnimation } from './GiftAnimation'
+// import { GiftAnimation } from './GiftAnimation'
 import type { Gift } from '@/types/gift'
 import { PatternBackground } from './PatternBackground'
 import { Plus } from 'lucide-react'

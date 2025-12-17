@@ -18,7 +18,12 @@ import { updateGiftCell } from '@/api/gifts'
 import { toast } from 'sonner'
 import { Spinner } from '../ui/spinner'
 import { useBackgrounds, useGifts } from '@/hooks/useGiftQueries'
-import { fetchModels, fetchPatterns } from '@/api/changes'
+// import { fetchModels, fetchPatterns } from '@/api/changes'
+
+import { useGiftCollection } from '@/hooks/useGiftCollection'
+import { buildGiftTree } from '@/lib/buildGiftTree'
+import { useMemo } from 'react'
+
 
 
 export const GiftDrawer: FC = () => {
@@ -30,30 +35,42 @@ export const GiftDrawer: FC = () => {
 
   const selectField = useGiftStore((s) => s.selectField)
 
+  const giftName = selectedCell?.gift?.name
+
+  const { data: collectionData, isLoading: giftCollectionLoading } = useGiftCollection(giftName)
+
+  const giftTree = useMemo(() => {
+    if (!collectionData?.gifts) return {}
+    return buildGiftTree(collectionData.gifts)
+  }, [collectionData])
+
   const [drawerItems, setDrawerItems] = useState<{ id: number, title: string, image?: string, background?: GiftBackground }[]>([])
 
   const { data: gifts, isLoading: giftsLoading } = useGifts()
   const { data: backgrounds, isLoading: backgroundLoading } = useBackgrounds()
 
   // Динамические запросы для моделей и паттернов через React Query
-  const fetchModelsQuery = async () => {
-    if (!selectedCell?.gift?.name) return []
-    const data = await fetchModels(selectedCell.gift.name)
-    return data
-  }
+  // const fetchModelsQuery = async () => {
+  //   if (!selectedCell?.gift?.name) return []
+  //   const data = await fetchModels(selectedCell.gift.name)
+  //   return data
+  // }
 
-  const fetchPatternsQuery = async () => {
-    if (!selectedCell?.gift?.name) return []
-    const data = await fetchPatterns(selectedCell.gift.name)
-    return data
-  }
+  // const fetchPatternsQuery = async () => {
+  //   if (!selectedCell?.gift?.name) return []
+  //   const data = await fetchPatterns(selectedCell.gift.name)
+  //   return data
+  // }
 
 
   const handleSelect = (item) => {
     if (!editingFieldKey) return
 
     if (editingFieldKey === 'background') {
-      selectField(editingFieldKey, item.title, { background: item.background })
+      selectField('background', item.title, { background: item.background })
+    } else if (editingFieldKey === 'pattern') {
+      selectField(editingFieldKey, item.title)
+      selectField('id', item.id)
     } else {
       selectField(editingFieldKey, item.title)
     }
@@ -62,71 +79,94 @@ export const GiftDrawer: FC = () => {
     setDrawerItems([])
   }
 
-  // Когда открывается поле — грузим нужные элементы
-  useEffect(() => {
-    if (!editingFieldKey) return
+  const getDrawerItems = () => {
+    if (!editingFieldKey) return []
 
-    const loadItems = async () => {
-      let items: any[] = []
-
-      if (editingFieldKey === 'gifts') {
-        items = gifts.map((g: string, id: number) => ({
-          id,
-          title: g,
-          image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(g)}/png/Original.png`.replace(/'/g, "%27"),
-        }))
-      } else if (editingFieldKey === 'model' && selectedCell?.gift?.name) {
-        const data = await fetchModelsQuery()
-        items = data.map((m: any, id: number) => ({
-          id,
-          title: m.name,
-          image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(m.name)}.png`.replace(/'/g, "%27"),
-        }))
-      } else if (editingFieldKey === 'background') {
-        items = backgrounds.map((b: any) => ({
-          id: b.backdropId,
-          title: b.name,
-          background: b,
-        }))
-        console.log(items)
-      } else if (editingFieldKey === 'pattern' && selectedCell?.gift?.name) {
-        const data = await fetchPatternsQuery()
-        items = data.map((p: any, id: number) => ({
-          id,
-          title: p.name,
-          pattern: `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(p.name)}.png`.replace(/'/g, "%27"),
-        }))
-      }
-
-      setDrawerItems(items)
+    if (editingFieldKey === 'gifts') {
+      return gifts?.map((g: string, id: number) => ({
+        id,
+        title: g,
+        image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(g)}/png/Original.png`.replace(/'/g, "%27"),
+      }))
     }
+  
+    const model = selectedCell?.gift?.model
+    const backdrop = selectedCell?.gift?.background
+  
+    // 🧩 MODELS
+    if (editingFieldKey === 'model') {
+      return Object.keys(giftTree).map((m, id) => ({
+        id,
+        title: m,
+        image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(selectedCell?.gift.name)}/png/${encodeURIComponent(m)}.png`.replace(/'/g, "%27"),
+      }))
+    }
+  
+    // 🎨 BACKDROPS
+    if (editingFieldKey === 'background' && model) {
+      return Object.keys(giftTree[model]).map((b, id) => ({
+        id,
+        title: b,
+        background: backgrounds?.find((bg: GiftBackground) => bg.name === b),
+      }))
+    }
+  
+    // 🔮 SYMBOLS
+    if (editingFieldKey === 'pattern' && model && backdrop) {
+      return giftTree[model][backdrop.name].symbols.map((s, id) => ({
+        id: s.gift_number,
+        title: s.symbol,
+        url: s.url,
+        gift_number: s.gift_number,
+        pattern: `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell?.gift?.name)}/png/${encodeURIComponent(s.symbol)}.png`.replace(/'/g, "%27"),
+      }))
+    }
+  
+    return []
+  }
+  
 
-    loadItems()
-  }, [editingFieldKey, selectedCell, gifts, backgrounds])
-
-  // Когда пользователь открывает поле — загружаем данные
+  // Когда открывается поле — грузим нужные элементы
   // useEffect(() => {
   //   if (!editingFieldKey) return
-  
-  //   const load = async () => {
-  //     const loader = apiMap[editingFieldKey]
-  //     if (!loader) return
-  
-  //     let items = []
-  //     if (editingFieldKey === "model" && selectedCell?.gift) {
-  //       items = await loader(selectedCell?.gift?.name)
-  //     } else if (editingFieldKey === "pattern" && selectedCell?.gift) {
-  //       items = await loader(selectedCell?.gift?.name)
-  //     } else {
-  //       items = await loader()
+
+  //   const loadItems = async () => {
+  //     let items: any[] = []
+
+  //     if (editingFieldKey === 'gifts') {
+  //       items = gifts.map((g: string, id: number) => ({
+  //         id,
+  //         title: g,
+  //         image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(g)}/png/Original.png`.replace(/'/g, "%27"),
+  //       }))
+  //     } else if (editingFieldKey === 'model' && selectedCell?.gift?.name) {
+  //       const data = await fetchModelsQuery()
+  //       items = data.map((m: any, id: number) => ({
+  //         id,
+  //         title: m.name,
+  //         image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(m.name)}.png`.replace(/'/g, "%27"),
+  //       }))
+  //     } else if (editingFieldKey === 'background') {
+  //       items = backgrounds.map((b: any) => ({
+  //         id: b.backdropId,
+  //         title: b.name,
+  //         background: b,
+  //       }))
+  //       console.log(items)
+  //     } else if (editingFieldKey === 'pattern' && selectedCell?.gift?.name) {
+  //       const data = await fetchPatternsQuery()
+  //       items = data.map((p: any, id: number) => ({
+  //         id,
+  //         title: p.name,
+  //         pattern: `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(p.name)}.png`.replace(/'/g, "%27"),
+  //       }))
   //     }
-  
+
   //     setDrawerItems(items)
   //   }
-  
-  //   load()
+
+  //   loadItems()
   // }, [editingFieldKey, selectedCell, gifts, backgrounds])
-  
 
 
   const queryClient = useQueryClient();
@@ -174,9 +214,17 @@ export const GiftDrawer: FC = () => {
               </div>
 
               <div className="relative h-full z-10 flex items-center justify-center">
-                <div className="h-4/5 w-full max-w-xs rounded-3xl flex items-center justify-center overflow-hidden">
+                <div className="h-5/8 w-full max-w-xs rounded-3xl flex items-center justify-center overflow-hidden">
                   {selectedCell?.gift && <GiftAnimation gift={selectedCell.gift} className="h-full" />}
                 </div>
+
+                {selectedCell?.gift && selectedCell?.gift?.id != 0 &&
+                  <div className="absolute b-0 w-full text-center text-white/70 text-xs bottom-0 py-3">
+                    <a href={`https://t.me/nft/${selectedCell?.gift?.name?.replace(/\s+/g, '')}-${selectedCell?.gift?.id}`}>
+                      Collectible #{selectedCell?.gift?.id ?? 0}
+                    </a>
+                  </div>
+                }
               </div>
             </div>
 
@@ -184,26 +232,44 @@ export const GiftDrawer: FC = () => {
 
               <div className="bg-card/50 mx-4 divide-y divide-border rounded-xl border border-solid border-border-600 overflow-hidden">
                 {
-                  giftFields.map((field, i) => (
-                    <button
-                      key={field.key}
-                      className="flex w-full items-center justify-between text-left"
-                      onClick={() => setEditingFieldKey(field.key)}
-                    >
-                      <span className="flex-1 pl-3 py-3 bg-card text-sm text-card-foreground/90">
-                        {field.label}
-                      </span>
-                      <div className="flex flex-2 px-5 py-3 justify-between items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">
-                          {field.key === 'gifts' ? <>{selectedCell?.gift?.name ?? "All"}</> : null}
-                          {field.key === 'model' ? <>{selectedCell?.gift?.model ?? "All"}</> : null}
-                          {field.key === 'background' ? <>{selectedCell?.gift?.background?.name ?? "All"}</> : null}
-                          {field.key === 'pattern' ? <>{selectedCell?.gift?.pattern ?? "All"}</> : null}
+                  giftFields.map((field, i) => {
+                    const isLoading = i === 0 ? giftsLoading : giftCollectionLoading
+                    
+                    // Логика disabled в зависимости от выбранных значений
+                    let isFieldDisabled = isLoading
+                    if (field.key === 'model' && !selectedCell?.gift?.name) {
+                      isFieldDisabled = true
+                    } else if (field.key === 'background' && (!selectedCell?.gift?.name || !selectedCell?.gift?.model)) {
+                      isFieldDisabled = true
+                    } else if (field.key === 'pattern' && (!selectedCell?.gift?.name || !selectedCell?.gift?.model || !selectedCell?.gift?.background)) {
+                      isFieldDisabled = true
+                    }
+                    
+                    return (
+                      <button
+                        key={field.key}
+                        className="flex w-full items-center justify-between text-left"
+                        onClick={() => {
+                          if (isFieldDisabled) return
+                          setEditingFieldKey(field.key)
+                        }}
+                        disabled={isFieldDisabled}
+                      >
+                        <span className="flex-1 pl-3 py-3 bg-card text-sm text-card-foreground/90">
+                          {field.label}
                         </span>
-                        <ChevronDown className="h-4 w-4 text-foreground/60" />
-                      </div>
-                    </button>
-                  ))
+                        <div className="flex flex-2 px-5 py-3 justify-between items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">
+                            {field.key === 'gifts' ? <>{selectedCell?.gift?.name ?? "All"}</> : null}
+                            {field.key === 'model' ? <>{selectedCell?.gift?.model ?? "All"}</> : null}
+                            {field.key === 'background' ? <>{selectedCell?.gift?.background?.name ?? "All"}</> : null}
+                            {field.key === 'pattern' ? <>{selectedCell?.gift?.pattern ?? "All"}</> : null}
+                          </span>
+                          {isLoading ? <Spinner className="text-primary" /> : <ChevronDown className="h-4 w-4 text-foreground/60" />}
+                        </div>
+                      </button>
+                    )
+                  })
                 }
               </div>
 
@@ -229,7 +295,7 @@ export const GiftDrawer: FC = () => {
             }
           }}
           title={giftFields.find((f) => f.key === editingFieldKey)?.label}
-          items={drawerItems}
+          items={getDrawerItems()}
           handleSelect={handleSelect}
         />
 

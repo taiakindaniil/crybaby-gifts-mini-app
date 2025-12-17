@@ -24,5 +24,5 @@ export type Gift = {
 export const getLottieURL = (gift: Gift) => {
     if (!gift.name) return null
     // console.log(`https://cdn.changes.tg/gifts/models/${encodeURIComponent(gift.name)}/lottie/${encodeURIComponent(gift.model ? "Original" : gift.model!)}.json`)
-    return `https://cdn.changes.tg/gifts/models/${encodeURIComponent(gift.name)}/lottie/${encodeURIComponent(gift.model === undefined ? "Original" : gift.model!)}.json`
+    return `https://cdn.changes.tg/gifts/models/${encodeURIComponent(gift.name)}/lottie/${encodeURIComponent(gift.model ? gift.model! : "Original")}.json`
 }

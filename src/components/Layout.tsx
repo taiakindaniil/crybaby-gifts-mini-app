@@ -18,7 +18,7 @@ export function Layout({ children }: PropsWithChildren) {
         zIndex: 1000
       }}>
         <Toaster />
-        <TabBar />
+        {/* <TabBar /> */}
       </div>
     </div>
   );
