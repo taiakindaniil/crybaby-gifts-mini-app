@@ -3,6 +3,7 @@ import type { ComponentType, JSX } from 'react'
 import { IndexPage } from '@/pages/IndexPage'
 import { ExplorePage } from '@/pages/Explore/ExplorePage'
 import { SettingsPage } from '@/pages/SettingsPage';
+import { SubscriptionPage } from '@/pages/SubscriptionPage';
 
 interface Route {
   path: string;
@@ -16,4 +17,5 @@ export const routes: Route[] = [
   { path: '/explore', Component: ExplorePage, title: 'Explore Page' },
   { path: '/portfolio', Component: IndexPage, title: 'Portfolio' },
   { path: '/settings', Component: SettingsPage, title: 'Settings' },
+  { path: '/subscription', Component: SubscriptionPage, title: 'Subscription' },
 ]

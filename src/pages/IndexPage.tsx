@@ -9,6 +9,7 @@ import ProfileTabs from '@/components/profile/ProfileTabs'
 import { Button } from '@/components/ui/button'
 import { Settings } from "lucide-react"
 import { Link } from 'react-router-dom';
+import { SubscriptionItem } from '@/components/subscription/SubscriptionItem'
 
 export const IndexPage: FC = () => {
   const lp = useMemo(() => retrieveLaunchParams(), []);
@@ -25,6 +26,8 @@ export const IndexPage: FC = () => {
             </Link>
           </Button>
         </div>
+
+        <SubscriptionItem />
 
         <ProfileHeader user={user} />
 
