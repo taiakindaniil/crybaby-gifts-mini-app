@@ -31,35 +31,31 @@ export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, hand
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
-      <DrawerContent 
-        className="z-[10000] p-4 bg-neutral-950 text-foreground bg-background border-none rounded-t-3xl flex flex-col [&>div:first-child]:hidden"
-      >
+      <DrawerContent className="z-[10000] p-4 bg-neutral-950 text-foreground bg-background border-none rounded-t-3xl h-[100vh] [&>div:first-child]:hidden">
         <div className="bg-foreground/8 mx-auto hidden h-1 w-[80px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block"></div>
-        <DrawerHeader className="px-2 pb-0 pt-2 shrink-0">
+        <DrawerHeader className="px-2 pb-0 pt-2">
           <DrawerTitle className="text-2xl text-left">{title}</DrawerTitle>
         </DrawerHeader>
 
-        <InputGroup className="py-6 mt-3 rounded-xl bg-card border-0 text-foreground shrink-0">
+        <InputGroup className="py-6 mt-3 rounded-xl bg-card border-0 text-foreground">
           <InputGroupAddon>
             <Search />
           </InputGroupAddon>
           <Input
             placeholder="Search..."
             type="text"
-            inputMode="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="border-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-            autoComplete="off"
           />
         </InputGroup>
 
         {items.length == 0 ? (
-          <div className="w-full flex-1 flex justify-center items-center min-h-0">
+          <div className="w-full h-full flex justify-center items-center">
             <Spinner className="size-8" />
           </div>
         ) : (
-          <div className="mt-4 flex-1 overflow-y-auto space-y-2 min-h-0">
+          <div className="mt-4 overflow-y-auto space-y-2">
             {filtered.map((item) => (
               <div
                 key={item.id}
