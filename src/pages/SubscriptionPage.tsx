@@ -20,6 +20,8 @@ import { toast } from 'sonner'
 import { createInvoice, type Invoice } from '@/api/payment'
 
 import { invoice } from '@telegram-apps/sdk-react'
+import { useSubscription, isSubscriptionActive } from '@/hooks/useSubscription'
+import useApi from '@/api/hooks/useApi'
 
 const subscriptionItems = [
   {
@@ -52,15 +54,19 @@ export const SubscriptionPage: FC = () => {
 //   const lp = useMemo(() => retrieveLaunchParams(), []);
 //   const user = lp.tgWebAppData?.user
 
+  const api = useApi();
+  const { data: subscription } = useSubscription();
+  const hasActiveSubscription = isSubscriptionActive(subscription);
+
   const queryClient = useQueryClient();
 
   const createInvoiceMutation = useMutation({
     mutationFn: () => createInvoice(1),
     onSuccess: (data: Invoice) => {
       invoice.open(data.invoice_link, 'url').then((status) => {
-        console.log(status)
-        if (status == 'success') {
-          queryClient.invalidateQueries({ queryKey: ['invoice'] })
+        if (status == 'paid') {
+          // TODO: invalidate subscription
+          queryClient.invalidateQueries({ queryKey: ['subscription'] })
         }
       })
       queryClient.invalidateQueries({ queryKey: ['invoice'] })
@@ -97,13 +103,21 @@ export const SubscriptionPage: FC = () => {
           ))}
         </ItemGroup>
         <div className="mx-4 mt-4">
-          <Button className="rounded-full h-12 w-full cursor-pointer" onClick={() => createInvoiceMutation.mutate()}>
-            {createInvoiceMutation.isPending ? <Spinner className="text-white" /> : <>
-              <span className="text-sm font-medium text-white">
-              Get monthly subscription for <img src={starSvg} alt="stars" className="mt-[-2px] size-5 inline-block" />500
+          {hasActiveSubscription ? (
+            <div className="rounded-full h-12 w-full bg-green-500/20 border border-green-500/50 flex items-center justify-center">
+              <span className="text-sm font-medium text-green-500">
+                Subscription is active until {new Date(subscription?.end_date || '').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </span>
-            </>}
-          </Button>
+            </div>
+          ) : (
+            <Button className="rounded-full h-12 w-full cursor-pointer" onClick={() => createInvoiceMutation.mutate()}>
+              {createInvoiceMutation.isPending ? <Spinner className="text-white" /> : <>
+                <span className="text-sm font-medium text-white">
+                Get monthly subscription for <img src={starSvg} alt="stars" className="mt-[-2px] size-5 inline-block" />500
+                </span>
+              </>}
+            </Button>
+          )}
         </div>
       </div>
     </Page>
