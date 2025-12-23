@@ -15,13 +15,14 @@ import { Button } from '@/components/ui/button'
 // import { ProfileCard } from '@/components/profile/ProfileCard'
 // import ProfileTabs from '@/components/profile/ProfileTabs'
 import starSvg from '@/assets/star.svg'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { createInvoice, type Invoice } from '@/api/payment'
 
 import { invoice } from '@telegram-apps/sdk-react'
 import { useSubscription, isSubscriptionActive } from '@/hooks/useSubscription'
 import useApi from '@/api/hooks/useApi'
+import { getSubscriptionPlans, type SubscriptionPlan } from '@/api/subscription'
 
 const subscriptionItems = [
   {
@@ -60,8 +61,15 @@ export const SubscriptionPage: FC = () => {
 
   const queryClient = useQueryClient();
 
+  const { data: subscriptionPlans, isLoading: isSubscriptionPlansLoading } = useQuery<SubscriptionPlan[]>({
+    queryKey: ['subscriptionPlans'],
+    queryFn: getSubscriptionPlans,
+  })
+
+  const subscriptionPlan = subscriptionPlans?.[0];
+
   const createInvoiceMutation = useMutation({
-    mutationFn: () => createInvoice(1),
+    mutationFn: () => createInvoice(subscriptionPlan?.id ?? 1),
     onSuccess: (data: Invoice) => {
       invoice.open(data.invoice_link, 'url').then((status) => {
         if (status == 'paid') {
@@ -111,9 +119,9 @@ export const SubscriptionPage: FC = () => {
             </div>
           ) : (
             <Button className="rounded-full h-12 w-full cursor-pointer" onClick={() => createInvoiceMutation.mutate()}>
-              {createInvoiceMutation.isPending ? <Spinner className="text-white" /> : <>
+              {createInvoiceMutation.isPending || isSubscriptionPlansLoading ? <Spinner className="text-white" /> : <>
                 <span className="text-sm font-medium text-white">
-                Get monthly subscription for <img src={starSvg} alt="stars" className="mt-[-2px] size-5 inline-block" />500
+                  Get monthly subscription for <img src={starSvg} alt="stars" className="mt-[-2px] size-5 inline-block" />{subscriptionPlan?.price}
                 </span>
               </>}
             </Button>

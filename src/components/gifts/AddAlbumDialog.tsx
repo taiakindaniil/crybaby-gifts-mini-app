@@ -6,7 +6,6 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { createGrid } from '@/api/gifts'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { postEvent } from '@telegram-apps/sdk-react'
 
 type AddAlbumDialogProps = {
   open: boolean
