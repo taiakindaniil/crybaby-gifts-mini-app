@@ -140,6 +140,7 @@ export const GiftDrawer: FC = () => {
           setSelectedCell(null)
         }
       }}
+      repositionInputs={false}
     >
       <DrawerContent className="z-1000 h-screen rounded-none bg-transparent border-none [&>div:first-child]:hidden">
         {(selectedCell !== undefined) && (

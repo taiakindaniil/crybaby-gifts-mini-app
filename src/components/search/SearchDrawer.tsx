@@ -1,4 +1,4 @@
-import { useState, useEffect, type FC } from "react";
+import { useState, type FC } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import type { GiftBackground } from "@/types/gift";
@@ -24,52 +24,15 @@ type Props = {
 
 export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, handleSelect }) => {
   const [query, setQuery] = useState("");
-  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
 
   const filtered = items.filter((item) =>
     item.title.toLowerCase().includes(query.toLowerCase())
   );
 
-  useEffect(() => {
-    if (!open) {
-      setViewportHeight(null);
-      return;
-    }
-
-    const updateHeight = () => {
-      // Используем визуальный viewport если доступен, иначе window.innerHeight
-      const height = window.visualViewport?.height || window.innerHeight;
-      setViewportHeight(height);
-    };
-
-    // Устанавливаем начальную высоту
-    updateHeight();
-
-    // Слушаем изменения визуального viewport (появление/скрытие клавиатуры)
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateHeight);
-    } else {
-      window.addEventListener('resize', updateHeight);
-    }
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateHeight);
-      } else {
-        window.removeEventListener('resize', updateHeight);
-      }
-    };
-  }, [open]);
-
   return (
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent 
         className="z-[10000] p-4 bg-neutral-950 text-foreground bg-background border-none rounded-t-3xl flex flex-col [&>div:first-child]:hidden"
-        style={{
-          maxHeight: viewportHeight ? `${viewportHeight}px` : '100svh',
-          height: viewportHeight ? `${viewportHeight}px` : '100svh',
-          bottom: 0,
-        }}
       >
         <div className="bg-foreground/8 mx-auto hidden h-1 w-[80px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block"></div>
         <DrawerHeader className="px-2 pb-0 pt-2 shrink-0">
