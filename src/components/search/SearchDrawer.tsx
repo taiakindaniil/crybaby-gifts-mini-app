@@ -62,7 +62,7 @@ export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, hand
   }, [open]);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent 
         className="z-[10000] p-4 bg-neutral-950 text-foreground bg-background border-none rounded-t-3xl flex flex-col [&>div:first-child]:hidden"
         style={{
