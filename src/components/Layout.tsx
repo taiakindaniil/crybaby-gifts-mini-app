@@ -4,8 +4,8 @@ import { Toaster } from 'sonner';
 
 export function Layout({ children }: PropsWithChildren) {
   return (
-    <div className="relative flex flex-col h-screen overflow-hidden">
-      <main className="flex flex-col items-center justify-items-center content-center overflow-y-auto overflow-x-hidden w-full h-full pb-20">
+    <div className="relative flex flex-col h-[100dvh] overflow-hidden">
+      <main className="flex flex-col items-center justify-items-center content-center overflow-y-auto overflow-x-hidden w-full flex-1 min-h-0 pb-20">
         <div className="mx-auto w-full max-w-[600px]">
           {children}
         </div>
