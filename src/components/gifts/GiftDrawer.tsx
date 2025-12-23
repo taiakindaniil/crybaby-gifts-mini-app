@@ -190,7 +190,7 @@ export const GiftDrawer: FC = () => {
 
             <div>
 
-              <div className="bg-card/50 mx-4 divide-y divide-border rounded-xl border border-solid border-border-600 overflow-hidden">
+              <div className="bg-card/50 mx-4 divide-y divide-border rounded-xl border border-solid border-border overflow-hidden">
                 {
                   giftFields.map((field, i) => {
                     const isLoading = i === 0 ? giftsLoading : giftCollectionLoading

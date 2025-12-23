@@ -46,7 +46,7 @@ export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, hand
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="border-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+            className="border-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none !bg-transparent"
           />
         </InputGroup>
 
