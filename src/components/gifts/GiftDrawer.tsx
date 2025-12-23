@@ -1,5 +1,5 @@
 import { useEffect, useState, type FC } from 'react'
-import { ChevronDown, Pin } from 'lucide-react'
+import { ChevronDown, Delete, Pin, Trash } from 'lucide-react'
 import {
   Drawer,
   DrawerContent,
@@ -48,19 +48,6 @@ export const GiftDrawer: FC = () => {
 
   const { data: gifts, isLoading: giftsLoading } = useGifts()
   const { data: backgrounds, isLoading: backgroundLoading } = useBackgrounds()
-
-  // Динамические запросы для моделей и паттернов через React Query
-  // const fetchModelsQuery = async () => {
-  //   if (!selectedCell?.gift?.name) return []
-  //   const data = await fetchModels(selectedCell.gift.name)
-  //   return data
-  // }
-
-  // const fetchPatternsQuery = async () => {
-  //   if (!selectedCell?.gift?.name) return []
-  //   const data = await fetchPatterns(selectedCell.gift.name)
-  //   return data
-  // }
 
 
   const handleSelect = (item) => {
@@ -124,55 +111,16 @@ export const GiftDrawer: FC = () => {
   
     return []
   }
-  
-
-  // Когда открывается поле — грузим нужные элементы
-  // useEffect(() => {
-  //   if (!editingFieldKey) return
-
-  //   const loadItems = async () => {
-  //     let items: any[] = []
-
-  //     if (editingFieldKey === 'gifts') {
-  //       items = gifts.map((g: string, id: number) => ({
-  //         id,
-  //         title: g,
-  //         image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(g)}/png/Original.png`.replace(/'/g, "%27"),
-  //       }))
-  //     } else if (editingFieldKey === 'model' && selectedCell?.gift?.name) {
-  //       const data = await fetchModelsQuery()
-  //       items = data.map((m: any, id: number) => ({
-  //         id,
-  //         title: m.name,
-  //         image: `https://cdn.changes.tg/gifts/models/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(m.name)}.png`.replace(/'/g, "%27"),
-  //       }))
-  //     } else if (editingFieldKey === 'background') {
-  //       items = backgrounds.map((b: any) => ({
-  //         id: b.backdropId,
-  //         title: b.name,
-  //         background: b,
-  //       }))
-  //       console.log(items)
-  //     } else if (editingFieldKey === 'pattern' && selectedCell?.gift?.name) {
-  //       const data = await fetchPatternsQuery()
-  //       items = data.map((p: any, id: number) => ({
-  //         id,
-  //         title: p.name,
-  //         pattern: `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(selectedCell.gift.name)}/png/${encodeURIComponent(p.name)}.png`.replace(/'/g, "%27"),
-  //       }))
-  //     }
-
-  //     setDrawerItems(items)
-  //   }
-
-  //   loadItems()
-  // }, [editingFieldKey, selectedCell, gifts, backgrounds])
-
 
   const queryClient = useQueryClient();
 
   const updateGiftMutation = useMutation({
-    mutationFn: () => updateGiftCell(selectedCell?.gridId, selectedCell?.rowIndex, selectedCell?.cellIndex, selectedCell?.gift),
+    mutationFn: (gift?: Gift | null) => updateGiftCell(
+      selectedCell?.gridId, 
+      selectedCell?.rowIndex, 
+      selectedCell?.cellIndex, 
+      gift !== undefined ? gift : selectedCell?.gift
+    ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grids'] })
       setSelectedCell(null)
@@ -207,10 +155,21 @@ export const GiftDrawer: FC = () => {
                 />
               }
 
-              <div className="absolute w-full my-4 px-4 z-10 flex items-center justify-end mb-2">
-                <button className="flex h-9 w-13 items-center justify-center rounded-full bg-white/15 backdrop-blur text-white">
+              <div className="absolute w-full my-4 px-4 z-20 flex items-center justify-end mb-2 gap-2">
+                {/* <button className="flex h-9 w-13 items-center justify-center rounded-full bg-white/15 backdrop-blur text-white">
                   <Pin className="w-5 h-5" />
-                </button>
+                </button> */}
+                {(selectedCell?.gift?.id ?? 0) > 0 && (
+                  <button 
+                    className="flex h-9 w-13 items-center justify-center rounded-full bg-white/15 backdrop-blur text-white z-20 relative active:scale-95 transition-transform cursor-pointer" 
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      updateGiftMutation.mutate(null)
+                    }}
+                  >
+                    <Trash className="w-5 h-5" />
+                  </button>
+                )}
               </div>
 
               <div className="relative h-full z-10 flex items-center justify-center">
@@ -248,7 +207,7 @@ export const GiftDrawer: FC = () => {
                     return (
                       <button
                         key={field.key}
-                        className="flex w-full items-center justify-between text-left"
+                        className="flex w-full items-center justify-between text-left cursor-pointer"
                         onClick={() => {
                           if (isFieldDisabled) return
                           setEditingFieldKey(field.key)
@@ -277,7 +236,7 @@ export const GiftDrawer: FC = () => {
                 <Button
                   size="default"
                   className="h-11 w-full rounded-full text-white font-semibold"
-                  onClick={() => updateGiftMutation.mutate()}
+                  onClick={() => updateGiftMutation.mutate(selectedCell?.gift ?? null)}
                 >
                   {updateGiftMutation.isPending ? <Spinner /> : 'Apply'}
                 </Button>

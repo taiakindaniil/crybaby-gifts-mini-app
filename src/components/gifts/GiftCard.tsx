@@ -12,10 +12,12 @@ type Props = {
 export const GiftCard: FC<Props> = ({ gift, onClick }) => {
   return (
     <div
-      className="border-0 relative aspect-square bg-card rounded-lg flex items-center justify-center border border-border/50 overflow-hidden cursor-pointer active:scale-95 transition-transform"
       style={{
-        background: `radial-gradient(circle, ${gift?.background?.hex.centerColor} 0%, ${gift?.background?.hex.edgeColor} 100%)`
+        ...(gift?.background ? {
+          background: `radial-gradient(circle, ${gift.background.hex.centerColor} 0%, ${gift.background.hex.edgeColor} 100%)`
+        } : {})
       }}
+      className={`${!gift?.background ? 'bg-card' : ''} border-0 relative aspect-square rounded-lg flex items-center justify-center border border-border/50 overflow-hidden cursor-pointer active:scale-95 transition-transform`}
       onClick={onClick}
     >
       {gift && <>
