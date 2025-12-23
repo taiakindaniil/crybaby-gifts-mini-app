@@ -35,8 +35,8 @@ export const IndexPage: FC = () => {
 
         <ProfileTabs user={user} />
 
-        <div className="py-5 text-foreground/50 text-center text-sm">
-          Big thanks to <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> for API
+        <div className="py-5 px-4 text-foreground/50 text-center text-sm">
+          Big thanks to <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> and <a href="https://t.me/proTON_priTON" className="text-primary">@proTON_priTON</a> for API
         </div>
 
         <GiftDrawer />

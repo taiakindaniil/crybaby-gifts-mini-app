@@ -6,7 +6,7 @@ import { Spinner } from '../ui/spinner';
 import { useState } from 'react';
 import { AddAlbumDialog } from '../gifts/AddAlbumDialog';
 import { useHasActiveSubscription } from '@/hooks/useSubscription';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Sparkles } from 'lucide-react';
 
@@ -21,6 +21,7 @@ interface TelegramUser {
 export default function ProfileGroupTabs({ user }: { user: TelegramUser }) {
     const [activeTab, setActiveTab] = useState<string | undefined>(undefined)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const navigate = useNavigate()
 
     const { data: grids = [], isLoading } = useQuery({queryKey: ['grids'], queryFn: () => getGrids(user.id)});
     const hasActiveSubscription = useHasActiveSubscription();
@@ -30,8 +31,9 @@ export default function ProfileGroupTabs({ user }: { user: TelegramUser }) {
       if (value !== 'add_album') {
         setActiveTab(value)
       } else {
-        // Если нет подписки, блокируем добавление альбома
+        // Если нет подписки, перенаправляем на страницу подписки
         if (!hasActiveSubscription) {
+          navigate('/subscription')
           return;
         }
         setIsDialogOpen(true)
@@ -57,7 +59,7 @@ export default function ProfileGroupTabs({ user }: { user: TelegramUser }) {
                 <TabsTrigger
                   key={grid.id}
                   value={String(grid.id || 0)}
-                  className="px-3 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-card dark:!data-[state=active]:bg-card rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none whitespace-nowrap shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-card dark:!data-[state=active]:bg-card rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none whitespace-nowrap shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span>{grid.name}</span>
                 </TabsTrigger>
@@ -65,9 +67,8 @@ export default function ProfileGroupTabs({ user }: { user: TelegramUser }) {
               <TabsTrigger
                 key="add_album"  
                 value="add_album"
-                disabled={!hasActiveSubscription}
                 onClick={() => {return}}
-                className="px-3 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-muted dark:!data-[state=active]:bg-muted rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none whitespace-nowrap shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-muted dark:!data-[state=active]:bg-muted rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none whitespace-nowrap shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 + Add Album
               </TabsTrigger>
