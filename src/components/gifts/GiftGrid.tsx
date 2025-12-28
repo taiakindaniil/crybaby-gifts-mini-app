@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { popup } from "@telegram-apps/sdk-react";
 import { toast } from "sonner";
 import { GiftCard } from "./GiftCard";
@@ -8,25 +8,91 @@ import { Button } from '../ui/button';
 import { useGiftStore } from '@/stores/giftStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addRow, deleteGrid, updateGiftCell, type Grid } from '@/api/gifts';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  useDraggable,
+  useDroppable,
+} from '@dnd-kit/core';
 
 type GiftGridProps = {
   gridId: number
   rows: (Gift | null)[][]
 }
 
-type DragData = {
+type CellId = `${number}-${number}`
+
+function parseCellId(id: string): { rowIndex: number; cellIndex: number } {
+  const [rowIndex, cellIndex] = id.split('-').map(Number);
+  return { rowIndex, cellIndex };
+}
+
+function createCellId(rowIndex: number, cellIndex: number): CellId {
+  return `${rowIndex}-${cellIndex}`;
+}
+
+type DraggableCellProps = {
+  id: CellId
   rowIndex: number
   cellIndex: number
   gift: Gift | null
+  onClick: () => void
+  isOver?: boolean
 }
+
+const DraggableCell: FC<DraggableCellProps> = ({ id, gift, onClick, isOver }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+  } = useDraggable({
+    id,
+    disabled: !gift, // Пустые ячейки не перетаскиваются
+  });
+
+  const {
+    setNodeRef: setDroppableRef,
+    isOver: isDroppableOver,
+  } = useDroppable({
+    id,
+  });
+
+  return (
+    <div
+      ref={(node) => {
+        setNodeRef(node);
+        setDroppableRef(node);
+      }}
+      className={`touch-none ${isDroppableOver || isOver ? 'ring-1 ring-primary rounded-lg ring-offset-1' : ''}`}
+    >
+      <div {...attributes} {...listeners}>
+        <GiftCard
+          gift={gift}
+          onClick={onClick}
+        />
+      </div>
+    </div>
+  );
+};
 
 export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   const setSelectedCell = useGiftStore().setSelectedCell;
   const queryClient = useQueryClient();
-  const [draggedItem, setDraggedItem] = useState<DragData | null>(null);
-  const [dragOverCell, setDragOverCell] = useState<{ rowIndex: number; cellIndex: number } | null>(null);
-  const [touchDragPosition, setTouchDragPosition] = useState<{ x: number; y: number } | null>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Настройка сенсоров для drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Минимальное расстояние для активации drag (в пикселях)
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
 
   const addRowMutation = useMutation({
     mutationFn: () => addRow(gridId),
@@ -71,18 +137,13 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
       sourceGift: Gift | null
       targetGift: Gift | null
     }) => {
-      // Используем исходные данные, переданные из onMutate
-      // Обновляем обе ячейки параллельно
       await Promise.all([
         updateGiftCell(gridId, sourceRow, sourceCell, targetGift),
         updateGiftCell(gridId, targetRow, targetCell, sourceGift),
       ])
     },
     onMutate: async ({ sourceRow, sourceCell, targetRow, targetCell, sourceGift, targetGift }) => {
-      // Отменяем исходящие запросы, чтобы не перезаписать optimistic update
       await queryClient.cancelQueries({ queryKey: ['grids'] })
-
-      // Сохраняем предыдущее значение для отката
       const previousGrids = queryClient.getQueryData<Grid[]>(['grids'])
 
       // Optimistic update
@@ -93,11 +154,9 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
           if (grid.id !== gridId) return grid
 
           const newRows = [...grid.rows]
-          // Используем исходные данные для обмена
           const originalSourceGift = sourceGift
           const originalTargetGift = targetGift
 
-          // Обновляем ячейки
           if (newRows[sourceRow]) {
             newRows[sourceRow] = {
               ...newRows[sourceRow],
@@ -121,186 +180,64 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
         })
       })
 
-      // Возвращаем контекст с предыдущими данными для отката и исходными данными для mutationFn
-      return { previousGrids, sourceGift, targetGift }
+      return { previousGrids }
     },
     onError: (error, _variables, context) => {
-      // Откатываем изменения в случае ошибки
       if (context?.previousGrids) {
         queryClient.setQueryData(['grids'], context.previousGrids)
       }
       toast("Error", {
         description: error.message || 'Failed to move gift',
       })
-      setDraggedItem(null)
-      setDragOverCell(null)
     },
     onSuccess: async () => {
-      // После успешного ответа сервера синхронизируем данные
-      // Небольшая задержка гарантирует, что сервер успел обработать запрос
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['grids'] })
       }, 200)
-      setDraggedItem(null)
-      setDragOverCell(null)
-    },
-    onSettled: () => {
-      // Убеждаемся, что состояние очищено
-      setDraggedItem(null)
-      setDragOverCell(null)
     },
   })
 
-  const handleDragStart = (rowIndex: number, cellIndex: number, gift: Gift | null) => {
-    if (!gift) return
-    setDraggedItem({ rowIndex, cellIndex, gift })
-  }
+  const [activeId, setActiveId] = useState<CellId | null>(null);
+  const [overId, setOverId] = useState<CellId | null>(null);
 
-  const handleDragEnd = () => {
-    setDraggedItem(null)
-    setDragOverCell(null)
-  }
+  const handleDragStart = (event: { active: { id: string | number } }) => {
+    const { active } = event;
+    setActiveId(active.id as CellId);
+  };
 
-  const handleDragOver = (e: React.DragEvent, rowIndex: number, cellIndex: number) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (draggedItem && (draggedItem.rowIndex !== rowIndex || draggedItem.cellIndex !== cellIndex)) {
-      setDragOverCell({ rowIndex, cellIndex })
+  const handleDragOver = (event: { over: { id: string | number } | null }) => {
+    const { over } = event;
+    if (over) {
+      setOverId(over.id as CellId);
     }
-  }
+  };
 
-  const handleDragLeave = () => {
-    setDragOverCell(null)
-  }
+  const handleDragEnd = (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setOverId(null);
 
-  const handleDrop = (e: React.DragEvent, rowIndex: number, cellIndex: number) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    if (!draggedItem) return
-    
-    // Если перетаскиваем в ту же ячейку, ничего не делаем
-    if (draggedItem.rowIndex === rowIndex && draggedItem.cellIndex === cellIndex) {
-      setDraggedItem(null)
-      setDragOverCell(null)
-      return
+    if (!over || active.id === over.id) {
+      return;
     }
 
-    // Получаем исходные данные из props (rows), так как они еще не обновлены
-    const sourceGift = rows[draggedItem.rowIndex]?.[draggedItem.cellIndex] || null
-    const targetGift = rows[rowIndex]?.[cellIndex] || null
+    const source = parseCellId(active.id as string);
+    const target = parseCellId(over.id as string);
+
+    // Получаем исходные данные из props (rows)
+    const sourceGift = rows[source.rowIndex]?.[source.cellIndex] || null
+    const targetGift = rows[target.rowIndex]?.[target.cellIndex] || null
 
     // Обмениваем подарки между ячейками
     swapGiftsMutation.mutate({
-      sourceRow: draggedItem.rowIndex,
-      sourceCell: draggedItem.cellIndex,
-      targetRow: rowIndex,
-      targetCell: cellIndex,
+      sourceRow: source.rowIndex,
+      sourceCell: source.cellIndex,
+      targetRow: target.rowIndex,
+      targetCell: target.cellIndex,
       sourceGift,
       targetGift,
     })
-  }
-
-  // Touch handlers
-  const handleTouchStart = (rowIndex: number, cellIndex: number, gift: Gift | null, e: React.TouchEvent) => {
-    if (!gift) return
-    setDraggedItem({ rowIndex, cellIndex, gift })
-    const touch = e.touches[0]
-    setTouchDragPosition({ x: touch.clientX, y: touch.clientY })
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!draggedItem || !gridRef.current) return
-    
-    e.preventDefault()
-    const touch = e.touches[0]
-    setTouchDragPosition({ x: touch.clientX, y: touch.clientY })
-
-    // Находим элемент под пальцем
-    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY)
-    if (!elementBelow) return
-
-    // Ищем родительский контейнер ячейки
-    const cellContainer = elementBelow.closest('[data-cell-index]')
-    if (!cellContainer) return
-
-    const targetRowIndex = parseInt(cellContainer.getAttribute('data-row-index') || '-1')
-    const targetCellIndex = parseInt(cellContainer.getAttribute('data-cell-index') || '-1')
-
-    if (targetRowIndex >= 0 && targetCellIndex >= 0) {
-      if (draggedItem.rowIndex !== targetRowIndex || draggedItem.cellIndex !== targetCellIndex) {
-        setDragOverCell({ rowIndex: targetRowIndex, cellIndex: targetCellIndex })
-      } else {
-        setDragOverCell(null)
-      }
-    }
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!draggedItem) return
-
-    const touch = e.changedTouches[0]
-    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY)
-    
-    if (elementBelow) {
-      const cellContainer = elementBelow.closest('[data-cell-index]')
-      if (cellContainer) {
-        const targetRowIndex = parseInt(cellContainer.getAttribute('data-row-index') || '-1')
-        const targetCellIndex = parseInt(cellContainer.getAttribute('data-cell-index') || '-1')
-
-        if (targetRowIndex >= 0 && targetCellIndex >= 0) {
-          // Если перетаскиваем в ту же ячейку, ничего не делаем
-          if (draggedItem.rowIndex !== targetRowIndex || draggedItem.cellIndex !== targetCellIndex) {
-            // Получаем исходные данные из props (rows), так как они еще не обновлены
-            const sourceGift = rows[draggedItem.rowIndex]?.[draggedItem.cellIndex] || null
-            const targetGift = rows[targetRowIndex]?.[targetCellIndex] || null
-
-            // Обмениваем подарки между ячейками
-            swapGiftsMutation.mutate({
-              sourceRow: draggedItem.rowIndex,
-              sourceCell: draggedItem.cellIndex,
-              targetRow: targetRowIndex,
-              targetCell: targetCellIndex,
-              sourceGift,
-              targetGift,
-            })
-          } else {
-            setDraggedItem(null)
-            setDragOverCell(null)
-            setTouchDragPosition(null)
-          }
-        } else {
-          setDraggedItem(null)
-          setDragOverCell(null)
-          setTouchDragPosition(null)
-        }
-      } else {
-        setDraggedItem(null)
-        setDragOverCell(null)
-        setTouchDragPosition(null)
-      }
-    } else {
-      setDraggedItem(null)
-      setDragOverCell(null)
-      setTouchDragPosition(null)
-    }
-  }
-
-  // Предотвращаем скролл при перетаскивании на touch устройствах
-  useEffect(() => {
-    if (draggedItem && touchDragPosition) {
-      document.body.style.overflow = 'hidden'
-      document.body.style.touchAction = 'none'
-    } else {
-      document.body.style.overflow = ''
-      document.body.style.touchAction = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-      document.body.style.touchAction = ''
-    }
-  }, [draggedItem, touchDragPosition])
+  };
 
   const openPopup = () => {
     popup.show({
@@ -316,34 +253,35 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
       }
     })
   }
+
+  const activeGift = activeId ? (() => {
+    const { rowIndex, cellIndex } = parseCellId(activeId);
+    return rows[rowIndex]?.[cellIndex] || null;
+  })() : null;
   
   return (
     <>
-      <div ref={gridRef} className="space-y-2">
-        {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="grid grid-cols-3 gap-2">
-            {row.map((gift, cellIndex) => {
-              const isDragged = draggedItem?.rowIndex === rowIndex && draggedItem?.cellIndex === cellIndex
-              const isDragOver = dragOverCell?.rowIndex === rowIndex && dragOverCell?.cellIndex === cellIndex
-              
-              return (
-                <div
-                  key={cellIndex}
-                  data-row-index={rowIndex}
-                  data-cell-index={cellIndex}
-                  onDragOver={(e) => handleDragOver(e, rowIndex, cellIndex)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, rowIndex, cellIndex)}
-                  className={`
-                    ${isDragOver ? 'ring-2 ring-primary ring-offset-2' : ''}
-                    ${isDragged ? 'opacity-50' : ''}
-                    transition-all
-                  `}
-                >
-                  <GiftCard
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="space-y-2">
+          {rows.map((row, rowIndex) => (
+            <div key={rowIndex} className="grid grid-cols-3 gap-2">
+              {row.map((gift, cellIndex) => {
+                const cellId = createCellId(rowIndex, cellIndex);
+                
+                return (
+                  <DraggableCell
+                    key={cellId}
+                    id={cellId}
+                    rowIndex={rowIndex}
+                    cellIndex={cellIndex}
                     gift={gift}
-                    draggable={true}
-                    isDragging={isDragged && !!touchDragPosition}
+                    isOver={overId === cellId && activeId !== cellId}
                     onClick={() =>
                       setSelectedCell({
                         gridId,
@@ -352,38 +290,21 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
                         gift: gift,
                       })
                     }
-                    onDragStart={() => handleDragStart(rowIndex, cellIndex, gift)}
-                    onDragEnd={handleDragEnd}
-                    onTouchStart={(e) => handleTouchStart(rowIndex, cellIndex, gift, e)}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
                   />
-                </div>
-              )
-            })}
-          </div>
-        ))}
-      </div>
-      
-      {/* Визуальный индикатор перетаскивания для touch устройств */}
-      {draggedItem && touchDragPosition && (
-        <div
-          className="fixed pointer-events-none z-50"
-          style={{
-            left: touchDragPosition.x - 50,
-            top: touchDragPosition.y - 50,
-            width: 100,
-            height: 100,
-            opacity: 0.8,
-          }}
-        >
-          <GiftCard
-            gift={draggedItem.gift}
-            draggable={false}
-            onClick={() => {}}
-          />
+                )
+              })}
+            </div>
+          ))}
         </div>
-      )}
+
+        <DragOverlay>
+          {activeGift ? (
+            <div className="opacity-80 scale-110">
+              <GiftCard gift={activeGift} onClick={() => {}} />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       <Button
         size="default"

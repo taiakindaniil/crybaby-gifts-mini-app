@@ -1,6 +1,6 @@
 import type { FC } from 'react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { BadgeCheckIcon, Check } from 'lucide-react'
+import { BadgeCheckIcon } from 'lucide-react'
 import { useHasActiveSubscription } from '@/hooks/useSubscription'
 
 export const ProfileHeader: FC = ({ user }) => {
