@@ -19,6 +19,7 @@ import {
   DragOverlay,
   useDraggable,
   useDroppable,
+  MouseSensor,
 } from '@dnd-kit/core';
 
 type GiftGridProps = {
@@ -86,18 +87,16 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   const queryClient = useQueryClient();
 
   // Настройка сенсоров для drag and drop
-  // Используем delay для TouchSensor, чтобы дать время для скролла
-  // и distance для PointerSensor, чтобы избежать случайной активации
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 8, // Минимальное расстояние для активации drag
+        distance: 8,
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250, // Задержка 250ms перед активацией drag (дает время для скролла)
-        tolerance: 5, // Допустимое движение во время задержки
+        delay: 300,
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor)
