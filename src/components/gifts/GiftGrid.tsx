@@ -298,11 +298,9 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
         </div>
 
         <DragOverlay>
-          {activeGift ? (
-            <div className="opacity-80 scale-110">
-              <GiftCard gift={activeGift} onClick={() => {}} />
-            </div>
-          ) : null}
+          <div className="opacity-80">
+            <GiftCard gift={activeGift} onClick={() => {}} />
+          </div>
         </DragOverlay>
       </DndContext>
 
