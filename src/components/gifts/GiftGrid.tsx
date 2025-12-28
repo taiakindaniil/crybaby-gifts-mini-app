@@ -13,6 +13,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragOverlay,
@@ -68,7 +69,7 @@ const DraggableCell: FC<DraggableCellProps> = ({ id, gift, onClick, isOver }) =>
         setNodeRef(node);
         setDroppableRef(node);
       }}
-      className={`touch-none ${isDroppableOver || isOver ? 'ring-1 ring-primary rounded-lg ring-offset-1' : ''}`}
+      className={`${isDroppableOver || isOver ? 'ring-1 ring-primary rounded-lg ring-offset-1' : ''}`}
     >
       <div {...attributes} {...listeners}>
         <GiftCard
@@ -85,10 +86,18 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   const queryClient = useQueryClient();
 
   // Настройка сенсоров для drag and drop
+  // Используем delay для TouchSensor, чтобы дать время для скролла
+  // и distance для PointerSensor, чтобы избежать случайной активации
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 16, // Минимальное расстояние для активации drag (в пикселях)
+        distance: 8, // Минимальное расстояние для активации drag
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250, // Задержка 250ms перед активацией drag (дает время для скролла)
+        tolerance: 5, // Допустимое движение во время задержки
       },
     }),
     useSensor(KeyboardSensor)
