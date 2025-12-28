@@ -112,7 +112,7 @@ export const GiftCard: FC<Props> = ({
           zIndex: 1000,
         } : {})
       }}
-      className={`${!gift?.background ? 'bg-card' : ''} border-0 relative aspect-square rounded-lg flex items-center justify-center border border-border/50 overflow-hidden cursor-pointer active:scale-95 transition-transform ${draggable && gift ? 'cursor-grab active:cursor-grabbing touch-none' : ''} ${isDragging ? 'shadow-lg' : ''}`}
+      className={`${!gift?.background ? 'bg-card' : ''} border-0 relative aspect-square rounded-lg flex items-center justify-center border border-border/50 cursor-pointer active:scale-95 transition-transform select-none ${draggable && gift ? 'cursor-grab active:cursor-grabbing touch-none' : ''} ${isDragging ? 'shadow-lg' : ''}`}
       onClick={onClick}
       draggable={draggable && !!gift}
       onDragStart={onDragStart}
@@ -121,30 +121,32 @@ export const GiftCard: FC<Props> = ({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {gift && <>
-        {gift?.pattern && <PatternBackground
-          image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.pattern)}.png`.replace(/'/g, "%27")}
-        /> }
+      <div className="relative h-full w-full flex items-center justify-center overflow-hidden rounded-lg">
+        {gift && <>
+          {gift?.pattern && <PatternBackground
+            image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.pattern)}.png`.replace(/'/g, "%27")}
+          /> }
 
-        <div className="absolute inset-0 opacity-[0.03]">
-          <div className="grid grid-cols-3 gap-0.5 p-1">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className="w-full h-full bg-foreground rounded-[2px]"></div>
-            ))}
+          <div className="absolute inset-0 opacity-[0.03]">
+            <div className="grid grid-cols-3 gap-0.5 p-1">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <div key={i} className="w-full h-full bg-foreground rounded-[2px]"></div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="z-12 absolute top-2 -right-7 w-25 text-center bg-zinc-800 rotate-45">
-          <span className="text-xs text-white/80 font-medium">#{gift.id}</span>
-        </div>
+          <div className="absolute top-2 -right-7 w-25 text-center bg-zinc-800 rotate-45 z-12 ">
+            <span className="text-xs text-white/80 font-medium">#{gift.id}</span>
+          </div>
 
-        <div className="relative z-10 flex items-center justify-center text-3xl">
-          <img src={`https://cdn.changes.tg/gifts/models/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.model || 'Original')}.png`} className="w-2/3 h-full/2" />
-          {/* <GiftAnimation gift={gift} autoplay={false} className="w-2/3 h-full/2" /> */}
-        </div>
-      </> || <>
-        <><Plus className="text-foreground/60" /></>
-      </>}
+          <div className="relative z-10 flex items-center justify-center text-3xl">
+            <img src={`https://cdn.changes.tg/gifts/models/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.model || 'Original')}.png`} className="w-2/3 h-full/2" />
+            {/* <GiftAnimation gift={gift} autoplay={false} className="w-2/3 h-full/2" /> */}
+          </div>
+        </> || <>
+          <><Plus className="text-foreground/60" /></>
+        </>}
+      </div>
     </div>
   )
 }
