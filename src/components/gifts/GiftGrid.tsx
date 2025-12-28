@@ -12,7 +12,6 @@ import {
   DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -145,14 +144,20 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
       sourceGift: Gift | null
       targetGift: Gift | null
     }) => {
+      // Используем данные, переданные из onMutate через параметры
       await Promise.all([
         updateGiftCell(gridId, sourceRow, sourceCell, targetGift),
         updateGiftCell(gridId, targetRow, targetCell, sourceGift),
       ])
     },
     onMutate: async ({ sourceRow, sourceCell, targetRow, targetCell, sourceGift, targetGift }) => {
+      // Отменяем исходящие запросы, чтобы не перезаписать optimistic update
       await queryClient.cancelQueries({ queryKey: ['grids'] })
+      
+      // Сохраняем предыдущее значение для отката
       const previousGrids = queryClient.getQueryData<Grid[]>(['grids'])
+      
+      // Используем данные из параметров (получены в handleDragEnd из query cache ДО optimistic update)
 
       // Optimistic update
       queryClient.setQueryData<Grid[]>(['grids'], (old) => {
@@ -162,15 +167,14 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
           if (grid.id !== gridId) return grid
 
           const newRows = [...grid.rows]
-          const originalSourceGift = sourceGift
-          const originalTargetGift = targetGift
 
+          // Обновляем ячейки, используя исходные данные
           if (newRows[sourceRow]) {
             newRows[sourceRow] = {
               ...newRows[sourceRow],
               cells: [...newRows[sourceRow].cells]
             }
-            newRows[sourceRow].cells[sourceCell] = originalTargetGift
+            newRows[sourceRow].cells[sourceCell] = targetGift
           }
 
           if (newRows[targetRow]) {
@@ -178,7 +182,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
               ...newRows[targetRow],
               cells: [...newRows[targetRow].cells]
             }
-            newRows[targetRow].cells[targetCell] = originalSourceGift
+            newRows[targetRow].cells[targetCell] = sourceGift
           }
 
           return {
@@ -188,9 +192,12 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
         })
       })
 
+      // Возвращаем контекст с предыдущими данными
+      // Исходные данные (sourceGift, targetGift) будут использованы в mutationFn через параметры
       return { previousGrids }
     },
     onError: (error, _variables, context) => {
+      // Откатываем изменения в случае ошибки
       if (context?.previousGrids) {
         queryClient.setQueryData(['grids'], context.previousGrids)
       }
@@ -199,9 +206,9 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
       })
     },
     onSuccess: async () => {
-      setTimeout(async () => {
-        await queryClient.refetchQueries({ queryKey: ['grids'] })
-      }, 200)
+      // Optimistic update уже обновил данные правильно
+      // Не нужно refetch, так как это может перезаписать данные старыми данными с сервера
+      // если сервер еще не успел обработать запрос
     },
   })
 
@@ -232,11 +239,22 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
     const source = parseCellId(active.id as string);
     const target = parseCellId(over.id as string);
 
-    // Получаем исходные данные из props (rows)
-    const sourceGift = rows[source.rowIndex]?.[source.cellIndex] || null
-    const targetGift = rows[target.rowIndex]?.[target.cellIndex] || null
+    // Получаем исходные данные из query cache ДО вызова мутации
+    // Это важно, чтобы получить правильные данные до optimistic update
+    const grids = queryClient.getQueryData<Grid[]>(['grids']) || []
+    const currentGrid = grids.find(g => g.id === gridId)
+    
+    if (!currentGrid) {
+      toast("Error", {
+        description: 'Grid not found',
+      })
+      return
+    }
 
-    // Обмениваем подарки между ячейками
+    const sourceGift = currentGrid.rows[source.rowIndex]?.cells[source.cellIndex] || null
+    const targetGift = currentGrid.rows[target.rowIndex]?.cells[target.cellIndex] || null
+
+    // Передаем данные вместе с индексами
     swapGiftsMutation.mutate({
       sourceRow: source.rowIndex,
       sourceCell: source.cellIndex,
