@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { popup } from "@telegram-apps/sdk-react";
 import { toast } from "sonner";
 import { GiftCard } from "./GiftCard";
@@ -25,6 +25,8 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   const queryClient = useQueryClient();
   const [draggedItem, setDraggedItem] = useState<DragData | null>(null);
   const [dragOverCell, setDragOverCell] = useState<{ rowIndex: number; cellIndex: number } | null>(null);
+  const [touchDragPosition, setTouchDragPosition] = useState<{ x: number; y: number } | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const addRowMutation = useMutation({
     mutationFn: () => addRow(gridId),
@@ -132,6 +134,101 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
     })
   }
 
+  // Touch handlers
+  const handleTouchStart = (rowIndex: number, cellIndex: number, gift: Gift | null, e: React.TouchEvent) => {
+    if (!gift) return
+    setDraggedItem({ rowIndex, cellIndex, gift })
+    const touch = e.touches[0]
+    setTouchDragPosition({ x: touch.clientX, y: touch.clientY })
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!draggedItem || !gridRef.current) return
+    
+    e.preventDefault()
+    const touch = e.touches[0]
+    setTouchDragPosition({ x: touch.clientX, y: touch.clientY })
+
+    // Находим элемент под пальцем
+    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY)
+    if (!elementBelow) return
+
+    // Ищем родительский контейнер ячейки
+    const cellContainer = elementBelow.closest('[data-cell-index]')
+    if (!cellContainer) return
+
+    const targetRowIndex = parseInt(cellContainer.getAttribute('data-row-index') || '-1')
+    const targetCellIndex = parseInt(cellContainer.getAttribute('data-cell-index') || '-1')
+
+    if (targetRowIndex >= 0 && targetCellIndex >= 0) {
+      if (draggedItem.rowIndex !== targetRowIndex || draggedItem.cellIndex !== targetCellIndex) {
+        setDragOverCell({ rowIndex: targetRowIndex, cellIndex: targetCellIndex })
+      } else {
+        setDragOverCell(null)
+      }
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!draggedItem) return
+
+    const touch = e.changedTouches[0]
+    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY)
+    
+    if (elementBelow) {
+      const cellContainer = elementBelow.closest('[data-cell-index]')
+      if (cellContainer) {
+        const targetRowIndex = parseInt(cellContainer.getAttribute('data-row-index') || '-1')
+        const targetCellIndex = parseInt(cellContainer.getAttribute('data-cell-index') || '-1')
+
+        if (targetRowIndex >= 0 && targetCellIndex >= 0) {
+          // Если перетаскиваем в ту же ячейку, ничего не делаем
+          if (draggedItem.rowIndex !== targetRowIndex || draggedItem.cellIndex !== targetCellIndex) {
+            // Обмениваем подарки между ячейками
+            swapGiftsMutation.mutate({
+              sourceRow: draggedItem.rowIndex,
+              sourceCell: draggedItem.cellIndex,
+              targetRow: targetRowIndex,
+              targetCell: targetCellIndex,
+            })
+          } else {
+            setDraggedItem(null)
+            setDragOverCell(null)
+            setTouchDragPosition(null)
+          }
+        } else {
+          setDraggedItem(null)
+          setDragOverCell(null)
+          setTouchDragPosition(null)
+        }
+      } else {
+        setDraggedItem(null)
+        setDragOverCell(null)
+        setTouchDragPosition(null)
+      }
+    } else {
+      setDraggedItem(null)
+      setDragOverCell(null)
+      setTouchDragPosition(null)
+    }
+  }
+
+  // Предотвращаем скролл при перетаскивании на touch устройствах
+  useEffect(() => {
+    if (draggedItem && touchDragPosition) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.touchAction = 'none'
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+  }, [draggedItem, touchDragPosition])
+
   const openPopup = () => {
     popup.show({
       title: 'Delete album of nfts?',
@@ -149,7 +246,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   
   return (
     <>
-      <div className="space-y-2">
+      <div ref={gridRef} className="space-y-2">
         {rows.map((row, rowIndex) => (
           <div key={rowIndex} className="grid grid-cols-3 gap-2">
             {row.map((gift, cellIndex) => {
@@ -159,6 +256,8 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
               return (
                 <div
                   key={cellIndex}
+                  data-row-index={rowIndex}
+                  data-cell-index={cellIndex}
                   onDragOver={(e) => handleDragOver(e, rowIndex, cellIndex)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, rowIndex, cellIndex)}
@@ -171,6 +270,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
                   <GiftCard
                     gift={gift}
                     draggable={true}
+                    isDragging={isDragged && !!touchDragPosition}
                     onClick={() =>
                       setSelectedCell({
                         gridId,
@@ -181,6 +281,9 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
                     }
                     onDragStart={() => handleDragStart(rowIndex, cellIndex, gift)}
                     onDragEnd={handleDragEnd}
+                    onTouchStart={(e) => handleTouchStart(rowIndex, cellIndex, gift, e)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                   />
                 </div>
               )
@@ -188,6 +291,26 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
           </div>
         ))}
       </div>
+      
+      {/* Визуальный индикатор перетаскивания для touch устройств */}
+      {draggedItem && touchDragPosition && (
+        <div
+          className="fixed pointer-events-none z-50"
+          style={{
+            left: touchDragPosition.x - 50,
+            top: touchDragPosition.y - 50,
+            width: 100,
+            height: 100,
+            opacity: 0.8,
+          }}
+        >
+          <GiftCard
+            gift={draggedItem.gift}
+            draggable={false}
+            onClick={() => {}}
+          />
+        </div>
+      )}
 
       <Button
         size="default"
