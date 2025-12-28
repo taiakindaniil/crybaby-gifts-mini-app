@@ -3,6 +3,8 @@ import { useEffect, type FC } from 'react'
 import type { Gift } from '@/types/gift'
 import { getLottieURL } from '@/types/gift'
 import { useQuery } from '@tanstack/react-query'
+import useApi from '@/api/hooks/useApi'
+import { proxyLottieUrl } from '@/lib/giftUrls'
 
 type GiftAnimationProps = {
     gift: Gift
@@ -12,14 +14,18 @@ type GiftAnimationProps = {
 
 export const GiftAnimation: FC<GiftAnimationProps> = ({ gift, className, autoplay }) => {
     const lottieURL = getLottieURL(gift)
+    const api = useApi()
 
     const { data: animationData } = useQuery({
         queryKey: ['lottie', lottieURL],
         enabled: !!lottieURL,
         queryFn: async () => {
-            const res = await fetch(lottieURL!)
-            if (!res.ok) throw new Error('Failed to load lottie')
-            return res.json()
+            if (!lottieURL) throw new Error('Lottie URL is not available')
+            
+            const url = proxyLottieUrl(lottieURL)
+
+            const res = await api.get(url)
+            return res.data
         },
         staleTime: Infinity, // кеш всегда свежий
         // cacheTime: Infinity, // не удалять из кеша

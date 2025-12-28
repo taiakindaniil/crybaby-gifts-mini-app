@@ -1,4 +1,5 @@
 import React from 'react'
+import { useProxiedImageUrl } from '@/hooks/useProxiedImageUrl'
 
 type PatternItem = {
   left: number
@@ -16,6 +17,8 @@ export const PatternBackground: React.FC<PatternBackgroundProps> = ({
   image,
   className,
 }) => {
+  const proxiedImageUrl = useProxiedImageUrl(image)
+
   // ЛЕВО-СТОРОННИЕ БАЗОВЫЕ ЭЛЕМЕНТЫ
   const base: PatternItem[] = [
     { left: 25.5, top: 7, size: 7.2, opacity: 0.1 },
@@ -68,7 +71,7 @@ export const PatternBackground: React.FC<PatternBackgroundProps> = ({
             width: `${item.size}%`,
             height: `${item.size}%`,
             transform: 'translate(-50%, -50%)',
-            backgroundImage: `url(${image})`,
+            backgroundImage: proxiedImageUrl ? `url(${proxiedImageUrl})` : 'none',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',

@@ -3,6 +3,8 @@ import type { FC } from 'react'
 import type { Gift } from '@/types/gift'
 import { PatternBackground } from './PatternBackground'
 import { Plus } from 'lucide-react'
+import { buildGiftModelUrl, buildGiftPatternUrl } from '@/lib/giftUrls'
+import { ProxiedImage } from '@/components/ui/ProxiedImage'
 
 type Props = {
   gift?: Gift | null
@@ -26,7 +28,7 @@ export const GiftCard: FC<Props> = ({
       <div className="relative h-full w-full flex items-center justify-center overflow-hidden rounded-lg">
         {gift && <>
           {gift?.pattern && <PatternBackground
-            image={`https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.pattern)}.png`.replace(/'/g, "%27")}
+            image={buildGiftPatternUrl(gift.name, gift.pattern)}
           /> }
 
           <div className="absolute inset-0 opacity-[0.03]">
@@ -42,7 +44,7 @@ export const GiftCard: FC<Props> = ({
           </div>
 
           <div className="relative z-10 flex items-center justify-center text-3xl">
-            <img src={`https://cdn.changes.tg/gifts/models/${encodeURIComponent(gift.name)}/png/${encodeURIComponent(gift.model || 'Original')}.png`} className="w-2/3 h-full/2" />
+            <ProxiedImage src={buildGiftModelUrl(gift.name, gift.model || 'Original')} className="w-2/3 h-full/2" />
             {/* <GiftAnimation gift={gift} autoplay={false} className="w-2/3 h-full/2" /> */}
           </div>
         </> || <>

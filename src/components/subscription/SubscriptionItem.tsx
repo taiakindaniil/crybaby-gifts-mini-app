@@ -3,6 +3,8 @@ import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia } from "../ui/
 import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useHasActiveSubscription } from "@/hooks/useSubscription";
+import { proxyImageUrl } from "@/lib/giftUrls";
+import { ProxiedImage } from "@/components/ui/ProxiedImage";
 
 export const SubscriptionItem: FC = () => {
     const hasActiveSubscription = useHasActiveSubscription();
@@ -28,7 +30,7 @@ export const SubscriptionItem: FC = () => {
               </ItemContent>
               <div className="w-1/4">
                 <ItemMedia variant="image" className="absolute bottom-0 right-0 p-2 bg-transparent border-none w-28 h-28">
-                  <img src="https://cdn.changes.tg/gifts/models/Plush%20Pepe/png/Sunset.png" alt="Premium" />
+                  <ProxiedImage src={proxyImageUrl("https://cdn.changes.tg/gifts/models/Plush%20Pepe/png/Sunset.png")} alt="Premium" />
                 </ItemMedia>
               </div>
             </Link>

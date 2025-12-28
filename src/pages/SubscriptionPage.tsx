@@ -23,6 +23,8 @@ import { invoice } from '@telegram-apps/sdk-react'
 import { useSubscription, isSubscriptionActive } from '@/hooks/useSubscription'
 import useApi from '@/api/hooks/useApi'
 import { getSubscriptionPlans, type SubscriptionPlan } from '@/api/subscription'
+import { proxyImageUrl } from '@/lib/giftUrls'
+import { ProxiedImage } from '@/components/ui/ProxiedImage'
 
 const subscriptionItems = [
   {
@@ -89,7 +91,7 @@ export const SubscriptionPage: FC = () => {
   return (
     <Page back={true}>
       <div className="w-full">
-        <img src="https://cdn.changes.tg/gifts/models/Plush%20Pepe/png/Sunset.png" alt="Premium" className="mt-8 w-24 h-24 mx-auto" />
+        <ProxiedImage src={proxyImageUrl("https://cdn.changes.tg/gifts/models/Plush%20Pepe/png/Sunset.png")} alt="Premium" className="mt-8 w-24 h-24 mx-auto" />
         <h1 className="m-4 bold text-2xl font-semibold text-center">Exclusive features</h1>
         <ItemGroup className="bg-card rounded-xl overflow-hidden mx-4">
           {subscriptionItems.map((item) => (

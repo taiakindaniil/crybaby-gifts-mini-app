@@ -5,6 +5,7 @@ import type { GiftBackground } from "@/types/gift";
 import { Spinner } from "../ui/spinner";
 import { InputGroup, InputGroupAddon } from "../ui/input-group";
 import { Search } from "lucide-react";
+import { ProxiedImage } from "@/components/ui/ProxiedImage";
 
 type Item = {
   id: string
@@ -62,8 +63,8 @@ export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, hand
                 className="flex items-center gap-3 p-3 bg-card rounded-2xl border border-border active:scale-95 transition-transform"
                 onClick={() => handleSelect(item)}
               >
-                {item.image && <img width={44} height={44} src={item.image} />}
-                {item.pattern && <img width={44} height={44} src={item.pattern} className="dark:brightness-0 dark:invert box-border p-2" />}
+                {item.image && <ProxiedImage width={44} height={44} src={item.image} />}
+                {item.pattern && <ProxiedImage width={44} height={44} src={item.pattern} className="dark:brightness-0 dark:invert box-border p-2" />}
                 {item.background && (
                   <div
                     className="w-[44px] h-[44px] rounded-md text-white overflow-hidden"
