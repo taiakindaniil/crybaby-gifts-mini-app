@@ -88,7 +88,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Минимальное расстояние для активации drag (в пикселях)
+        distance: 16, // Минимальное расстояние для активации drag (в пикселях)
       },
     }),
     useSensor(KeyboardSensor)

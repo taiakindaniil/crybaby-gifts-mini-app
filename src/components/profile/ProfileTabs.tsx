@@ -202,7 +202,7 @@ export default function ProfileTabs({ user }) {
 
     return (
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full overflow-x-hidden">
-        <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+        <div className="overflow-x-auto scrollbar-hide">
           <TabsList className="inline-flex justify-start rounded-none border-b border-border bg-transparent h-auto p-0 min-w-full">
             {tabs.map((tab) => (
               <TabsTrigger
