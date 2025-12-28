@@ -25,7 +25,7 @@ type GiftStore = {
     editingFieldKey: string | null
     setEditingFieldKey: (key: string | null) => void
 
-    selectField: (key: keyof GiftFieldKey, value: string, extra?: any) => void
+    selectField: (key: string, value: string, extra?: any) => void
 }
 
 export const useGiftStore = create<GiftStore>((set, get) => ({

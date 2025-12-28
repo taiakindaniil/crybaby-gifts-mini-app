@@ -5,11 +5,14 @@ import { PatternBackground } from './PatternBackground'
 import { Plus } from 'lucide-react'
 
 type Props = {
-  gift?: Gift
+  gift?: Gift | null
   onClick: () => void
+  onDragStart?: (e: React.DragEvent) => void
+  onDragEnd?: (e: React.DragEvent) => void
+  draggable?: boolean
 }
 
-export const GiftCard: FC<Props> = ({ gift, onClick }) => {
+export const GiftCard: FC<Props> = ({ gift, onClick, onDragStart, onDragEnd, draggable = false }) => {
   return (
     <div
       style={{
@@ -17,8 +20,11 @@ export const GiftCard: FC<Props> = ({ gift, onClick }) => {
           background: `radial-gradient(circle, ${gift.background.hex.centerColor} 0%, ${gift.background.hex.edgeColor} 100%)`
         } : {})
       }}
-      className={`${!gift?.background ? 'bg-card' : ''} border-0 relative aspect-square rounded-lg flex items-center justify-center border border-border/50 overflow-hidden cursor-pointer active:scale-95 transition-transform`}
+      className={`${!gift?.background ? 'bg-card' : ''} border-0 relative aspect-square rounded-lg flex items-center justify-center border border-border/50 overflow-hidden cursor-pointer active:scale-95 transition-transform ${draggable && gift ? 'cursor-grab active:cursor-grabbing' : ''}`}
       onClick={onClick}
+      draggable={draggable && !!gift}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
     >
       {gift && <>
         {gift?.pattern && <PatternBackground
