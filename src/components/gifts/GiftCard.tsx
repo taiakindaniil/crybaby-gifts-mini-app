@@ -32,6 +32,7 @@ export const GiftCard: FC<Props> = ({
   const touchStartPos = useRef<{ x: number; y: number } | null>(null)
   const isLongPress = useRef<boolean>(false)
   const longPressTimer = useRef<NodeJS.Timeout | null>(null)
+  const isScrolling = useRef<boolean>(false)
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!gift || !draggable) return
@@ -40,20 +41,51 @@ export const GiftCard: FC<Props> = ({
     touchStartTime.current = Date.now()
     touchStartPos.current = { x: touch.clientX, y: touch.clientY }
     isLongPress.current = false
+    isScrolling.current = false
 
     // Запускаем таймер для определения долгого нажатия
     longPressTimer.current = setTimeout(() => {
-      isLongPress.current = true
-      if (onTouchStart) {
-        onTouchStart(e)
+      // Проверяем, не начался ли скролл за это время
+      if (!isScrolling.current) {
+        isLongPress.current = true
+        if (onTouchStart) {
+          onTouchStart(e)
+        }
+        // Предотвращаем скролл при начале перетаскивания
+        e.preventDefault()
       }
-      // Предотвращаем скролл при начале перетаскивания
-      e.preventDefault()
     }, 1500) // 1.5 секунды для активации drag
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!gift || !draggable) return
+
+    if (!touchStartPos.current) return
+
+    const touch = e.touches[0]
+    const deltaX = Math.abs(touch.clientX - touchStartPos.current.x)
+    const deltaY = Math.abs(touch.clientY - touchStartPos.current.y)
+    
+    // Определяем направление движения
+    // Если вертикальное движение больше горизонтального в 1.5 раза - это скролл
+    const isVerticalScroll = deltaY > deltaX * 1.5 && deltaY > 15
+
+    if (isVerticalScroll) {
+      // Это скролл - отменяем таймер и разрешаем скролл
+      isScrolling.current = true
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current)
+        longPressTimer.current = null
+      }
+      if (isLongPress.current) {
+        // Если уже начали drag, завершаем его
+        isLongPress.current = false
+        if (onTouchEnd) {
+          onTouchEnd(e)
+        }
+      }
+      return // Не предотвращаем скролл
+    }
 
     // Если это долгое нажатие и началось перетаскивание
     if (isLongPress.current) {
@@ -62,13 +94,8 @@ export const GiftCard: FC<Props> = ({
         onTouchMove(e)
       }
     } else if (touchStartPos.current) {
-      // Проверяем, переместился ли палец достаточно далеко
-      const touch = e.touches[0]
-      const deltaX = Math.abs(touch.clientX - touchStartPos.current.x)
-      const deltaY = Math.abs(touch.clientY - touchStartPos.current.y)
-      
-      // Если перемещение больше 10px, начинаем drag
-      if (deltaX > 10 || deltaY > 10) {
+      // Если перемещение больше 10px и это не вертикальный скролл, начинаем drag
+      if (deltaX > 10 || (deltaY > 10 && !isVerticalScroll)) {
         if (longPressTimer.current) {
           clearTimeout(longPressTimer.current)
           longPressTimer.current = null
@@ -88,8 +115,8 @@ export const GiftCard: FC<Props> = ({
       longPressTimer.current = null
     }
 
-    // Если это был клик (не долгое нажатие), вызываем onClick
-    if (!isLongPress.current && Date.now() - touchStartTime.current < 300) {
+    // Если это был клик (не долгое нажатие и не скролл), вызываем onClick
+    if (!isLongPress.current && !isScrolling.current && Date.now() - touchStartTime.current < 300) {
       onClick()
     }
 
@@ -98,6 +125,7 @@ export const GiftCard: FC<Props> = ({
     }
 
     isLongPress.current = false
+    isScrolling.current = false
     touchStartPos.current = null
   }
 
