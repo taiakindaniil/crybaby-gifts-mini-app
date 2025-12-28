@@ -7,7 +7,7 @@ import type { Gift } from '@/types/gift';
 import { Button } from '../ui/button';
 import { useGiftStore } from '@/stores/giftStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addRow, deleteGrid, updateGiftCell } from '@/api/gifts';
+import { addRow, deleteGrid, updateGiftCell, type Grid } from '@/api/gifts';
 
 type GiftGridProps = {
   gridId: number
@@ -60,31 +60,92 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
       sourceRow, 
       sourceCell, 
       targetRow, 
-      targetCell 
+      targetCell,
+      sourceGift,
+      targetGift
     }: { 
       sourceRow: number
       sourceCell: number
       targetRow: number
       targetCell: number
+      sourceGift: Gift | null
+      targetGift: Gift | null
     }) => {
-      const sourceGift = rows[sourceRow]?.[sourceCell] || null
-      const targetGift = rows[targetRow]?.[targetCell] || null
-
+      // Используем исходные данные, переданные из onMutate
       // Обновляем обе ячейки параллельно
       await Promise.all([
         updateGiftCell(gridId, sourceRow, sourceCell, targetGift),
         updateGiftCell(gridId, targetRow, targetCell, sourceGift),
       ])
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grids'] })
-      setDraggedItem(null)
-      setDragOverCell(null)
+    onMutate: async ({ sourceRow, sourceCell, targetRow, targetCell, sourceGift, targetGift }) => {
+      // Отменяем исходящие запросы, чтобы не перезаписать optimistic update
+      await queryClient.cancelQueries({ queryKey: ['grids'] })
+
+      // Сохраняем предыдущее значение для отката
+      const previousGrids = queryClient.getQueryData<Grid[]>(['grids'])
+
+      // Optimistic update
+      queryClient.setQueryData<Grid[]>(['grids'], (old) => {
+        if (!old) return old
+        
+        return old.map(grid => {
+          if (grid.id !== gridId) return grid
+
+          const newRows = [...grid.rows]
+          // Используем исходные данные для обмена
+          const originalSourceGift = sourceGift
+          const originalTargetGift = targetGift
+
+          // Обновляем ячейки
+          if (newRows[sourceRow]) {
+            newRows[sourceRow] = {
+              ...newRows[sourceRow],
+              cells: [...newRows[sourceRow].cells]
+            }
+            newRows[sourceRow].cells[sourceCell] = originalTargetGift
+          }
+
+          if (newRows[targetRow]) {
+            newRows[targetRow] = {
+              ...newRows[targetRow],
+              cells: [...newRows[targetRow].cells]
+            }
+            newRows[targetRow].cells[targetCell] = originalSourceGift
+          }
+
+          return {
+            ...grid,
+            rows: newRows
+          }
+        })
+      })
+
+      // Возвращаем контекст с предыдущими данными для отката и исходными данными для mutationFn
+      return { previousGrids, sourceGift, targetGift }
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      // Откатываем изменения в случае ошибки
+      if (context?.previousGrids) {
+        queryClient.setQueryData(['grids'], context.previousGrids)
+      }
       toast("Error", {
         description: error.message || 'Failed to move gift',
       })
+      setDraggedItem(null)
+      setDragOverCell(null)
+    },
+    onSuccess: async () => {
+      // После успешного ответа сервера синхронизируем данные
+      // Небольшая задержка гарантирует, что сервер успел обработать запрос
+      setTimeout(async () => {
+        await queryClient.refetchQueries({ queryKey: ['grids'] })
+      }, 200)
+      setDraggedItem(null)
+      setDragOverCell(null)
+    },
+    onSettled: () => {
+      // Убеждаемся, что состояние очищено
       setDraggedItem(null)
       setDragOverCell(null)
     },
@@ -125,12 +186,18 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
       return
     }
 
+    // Получаем исходные данные из props (rows), так как они еще не обновлены
+    const sourceGift = rows[draggedItem.rowIndex]?.[draggedItem.cellIndex] || null
+    const targetGift = rows[rowIndex]?.[cellIndex] || null
+
     // Обмениваем подарки между ячейками
     swapGiftsMutation.mutate({
       sourceRow: draggedItem.rowIndex,
       sourceCell: draggedItem.cellIndex,
       targetRow: rowIndex,
       targetCell: cellIndex,
+      sourceGift,
+      targetGift,
     })
   }
 
@@ -184,12 +251,18 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
         if (targetRowIndex >= 0 && targetCellIndex >= 0) {
           // Если перетаскиваем в ту же ячейку, ничего не делаем
           if (draggedItem.rowIndex !== targetRowIndex || draggedItem.cellIndex !== targetCellIndex) {
+            // Получаем исходные данные из props (rows), так как они еще не обновлены
+            const sourceGift = rows[draggedItem.rowIndex]?.[draggedItem.cellIndex] || null
+            const targetGift = rows[targetRowIndex]?.[targetCellIndex] || null
+
             // Обмениваем подарки между ячейками
             swapGiftsMutation.mutate({
               sourceRow: draggedItem.rowIndex,
               sourceCell: draggedItem.cellIndex,
               targetRow: targetRowIndex,
               targetCell: targetCellIndex,
+              sourceGift,
+              targetGift,
             })
           } else {
             setDraggedItem(null)

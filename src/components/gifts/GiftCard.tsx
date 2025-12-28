@@ -49,7 +49,7 @@ export const GiftCard: FC<Props> = ({
       }
       // Предотвращаем скролл при начале перетаскивания
       e.preventDefault()
-    }, 200) // 200ms для активации drag
+    }, 1500) // 1.5 секунды для активации drag
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
