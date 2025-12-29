@@ -1,12 +1,35 @@
 import type { FC } from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Copy, Check } from 'lucide-react'
+import { Copy, Check, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EditBioDialog } from './EditBioDialog'
 
-export const ProfileCard: FC = ({ user }) => {
+interface TelegramUser {
+  id: number;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  bio?: string;
+}
+
+interface ProfileCardProps {
+  user?: TelegramUser;
+}
+
+export const ProfileCard: FC<ProfileCardProps> = ({ user }) => {
     const [copied, setCopied] = useState(false)
+    const [isEditBioDialogOpen, setIsEditBioDialogOpen] = useState(false)
+    const [bio, setBio] = useState(user?.bio || "What doesn't kill you makes you stronger.")
+    
+    // Синхронизируем bio с user prop при изменении
+    useEffect(() => {
+        if (user?.bio !== undefined) {
+            setBio(user.bio || "What doesn't kill you makes you stronger.")
+        }
+    }, [user?.bio])
     
     // Получаем данные пользователя
     const username = user?.username || ''
@@ -64,10 +87,26 @@ export const ProfileCard: FC = ({ user }) => {
                     {/* Description */}
                     <div className="py-1">
                         <p className="text-sm text-muted-foreground mb-1">bio</p>
-                        <p className="text-m text-foreground">What doesn't kill you makes you stronger.</p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-m text-foreground flex-1 break-words overflow-wrap-anywhere overflow-x-hidden" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{bio}</p>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => setIsEditBioDialogOpen(true)}
+                            >
+                                <Pencil className="w-4 h-4" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </CardContent>
+            <EditBioDialog 
+                open={isEditBioDialogOpen} 
+                onOpenChange={setIsEditBioDialogOpen}
+                currentBio={bio}
+                onBioUpdated={setBio}
+            />
         </Card>
     )
 }
