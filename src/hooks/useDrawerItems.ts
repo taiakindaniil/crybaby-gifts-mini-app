@@ -19,6 +19,7 @@ type UseDrawerItemsParams = {
   gifts: string[] | undefined
   backgrounds: GiftBackground[] | undefined
   giftTree: GiftTree
+  mode?: 'constructor' | 'freeform'
 }
 
 export const useDrawerItems = ({
@@ -27,6 +28,7 @@ export const useDrawerItems = ({
   gifts,
   backgrounds,
   giftTree,
+  mode = 'constructor',
 }: UseDrawerItemsParams): DrawerItem[] => {
   return useMemo(() => {
     if (!editingFieldKey) return []
@@ -68,21 +70,52 @@ export const useDrawerItems = ({
       }))
     }
 
-    if (!background) return []
-
     // PATTERNS
     if (editingFieldKey === 'pattern') {
-      const symbols = giftTree[model]?.[background.name]?.symbols ?? []
-      return symbols.map((s) => ({
-        id: s.gift_number,
-        title: s.symbol,
-        url: s.url,
-        gift_number: s.gift_number,
-        pattern: buildGiftPatternUrl(giftName, s.symbol),
-      }))
+      if (mode === 'freeform') {
+        // В freeform режиме собираем все уникальные паттерны из всего giftTree
+        const allPatterns = new Map<string, { symbol: string; gift_number: number; url: string }>()
+        
+        // Проходим по всем моделям и фонам
+        Object.keys(giftTree).forEach((modelKey) => {
+          Object.keys(giftTree[modelKey]).forEach((backdropKey) => {
+            const symbols = giftTree[modelKey]?.[backdropKey]?.symbols ?? []
+            symbols.forEach((s) => {
+              // Используем symbol как ключ, чтобы избежать дубликатов
+              if (!allPatterns.has(s.symbol)) {
+                allPatterns.set(s.symbol, s)
+              }
+            })
+          })
+        })
+        
+        // Возвращаем все уникальные паттерны без id (id = 0)
+        return Array.from(allPatterns.values())
+          .filter((s) => s.symbol) // Фильтруем паттерны без symbol
+          .map((s) => ({
+            id: 0, // В freeform режиме id всегда 0
+            title: s.symbol,
+            url: s.url,
+            gift_number: s.gift_number,
+            pattern: buildGiftPatternUrl(giftName, s.symbol),
+          }))
+      } else {
+        // В constructor режиме используем текущую логику
+        if (!background) return []
+        const symbols = giftTree[model]?.[background.name]?.symbols ?? []
+        return symbols
+          .filter((s) => s.symbol) // Фильтруем паттерны без symbol
+          .map((s) => ({
+            id: s.gift_number,
+            title: s.symbol,
+            url: s.url,
+            gift_number: s.gift_number,
+            pattern: buildGiftPatternUrl(giftName, s.symbol),
+          }))
+      }
     }
 
     return []
-  }, [editingFieldKey, selectedGift, gifts, backgrounds, giftTree])
+  }, [editingFieldKey, selectedGift, gifts, backgrounds, giftTree, mode])
 }
 

@@ -1,20 +1,30 @@
 import { useState, useEffect, type ImgHTMLAttributes } from 'react'
 import useApi from '@/api/hooks/useApi'
+import { loadAndCacheImage, isNgrokUrl } from '@/lib/imageCache'
+import { useImageProxySetting } from '@/hooks/useImageProxySetting'
 
 type ProxiedImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
   src: string
 }
 
 /**
- * Компонент для загрузки изображений через прокси с обходом предупреждения ngrok
+ * Компонент для загрузки изображений
+ * Для ngrok URL использует прокси с blob для обхода предупреждения
+ * Для обычных URL использует прямой <img> с браузерным кэшем (отображается сразу)
  */
 export const ProxiedImage: React.FC<ProxiedImageProps> = ({ src, ...imgProps }) => {
+  const [isProxyEnabled] = useImageProxySetting()
+  const isNgrok = isNgrokUrl(src)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [error, setError] = useState(false)
   const api = useApi()
 
   useEffect(() => {
-    let blobUrl: string | null = null
+    // Если проксирование отключено или это не ngrok URL, ничего не делаем - используем src напрямую
+    if (!isProxyEnabled || !isNgrok) {
+      return
+    }
+
     let cancelled = false
 
     // Загружаем изображение через useApi с обходом предупреждения ngrok
@@ -24,19 +34,19 @@ export const ProxiedImage: React.FC<ProxiedImageProps> = ({ src, ...imgProps }) 
         const url = new URL(src)
         const path = url.pathname + url.search
 
-        const response = await api.get(path, {
-          responseType: 'blob',
+        // Используем loadAndCacheImage для кэширования и защиты от параллельных загрузок
+        const blobUrl = await loadAndCacheImage(src, async () => {
+          const response = await api.get(path, {
+            responseType: 'blob',
+          })
+          return response.data as Blob
         })
 
-        const blob = response.data as Blob
-        
         // Проверяем, не был ли эффект отменен во время загрузки
         if (cancelled) {
-          URL.revokeObjectURL(URL.createObjectURL(blob))
           return
         }
 
-        blobUrl = URL.createObjectURL(blob)
         setImageUrl(blobUrl)
         setError(false)
       } catch (err) {
@@ -50,14 +60,19 @@ export const ProxiedImage: React.FC<ProxiedImageProps> = ({ src, ...imgProps }) 
     loadImage()
 
     // Очищаем blob URL при размонтировании или изменении src
+    // Примечание: blob URL не нужно освобождать, так как он управляется кэшем
     return () => {
       cancelled = true
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl)
-      }
     }
-  }, [src, api])
+  }, [src, api, isNgrok, isProxyEnabled])
 
+  // Если проксирование отключено или это не ngrok URL, сразу возвращаем обычный img
+  // Браузер автоматически кэширует такие изображения
+  if (!isProxyEnabled || !isNgrok) {
+    return <img {...imgProps} src={src} />
+  }
+
+  // Для ngrok URL показываем состояние загрузки
   if (error) {
     return <img {...imgProps} src="" alt={imgProps.alt || ''} style={{ opacity: 0 }} />
   }

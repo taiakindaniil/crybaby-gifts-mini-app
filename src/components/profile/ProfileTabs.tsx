@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 // import { getGrids } from '@/api/gifts';
 import ProfileGroupTabs from './ProfileGroupTabs';
 
-export default function ProfileTabs({ user }) {
+export default function ProfileTabs({ user, isOwnProfile = false }: { user: any; isOwnProfile?: boolean }) {
     const [activeTab, setActiveTab] = useState('gifts')
 
     // const { data: grids = [], isLoading, error } = useQuery({queryKey: ['grids'], queryFn: getGrids});
@@ -220,7 +220,7 @@ export default function ProfileTabs({ user }) {
 
         {/* Gifts Content */}
         <TabsContent value="gifts" className="overflow-x-hidden">
-          <ProfileGroupTabs user={user} />
+          <ProfileGroupTabs user={user} isOwnProfile={isOwnProfile} />
         </TabsContent>
 
         {/* Other tabs content */}

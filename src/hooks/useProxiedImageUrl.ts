@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
 import useApi from '@/api/hooks/useApi'
+import { loadAndCacheImage, isNgrokUrl } from '@/lib/imageCache'
+import { useImageProxySetting } from '@/hooks/useImageProxySetting'
 
 /**
- * Хук для загрузки изображения через прокси с обходом предупреждения ngrok
- * Возвращает blob URL для использования в backgroundImage или других CSS свойствах
+ * Хук для загрузки изображения
+ * Для ngrok URL использует прокси с blob для обхода предупреждения
+ * Для обычных URL возвращает URL напрямую (браузер кэширует автоматически)
+ * 
+ * Возвращает URL для использования в backgroundImage или других CSS свойствах
  */
 export const useProxiedImageUrl = (url: string | null | undefined): string | null => {
+  const [isProxyEnabled] = useImageProxySetting()
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const api = useApi()
 
@@ -15,7 +21,14 @@ export const useProxiedImageUrl = (url: string | null | undefined): string | nul
       return
     }
 
-    let blobUrl: string | null = null
+    // Если проксирование отключено или это не ngrok URL, возвращаем URL напрямую
+    // Браузер автоматически кэширует такие изображения
+    if (!isProxyEnabled || !isNgrokUrl(url)) {
+      setImageUrl(url)
+      return
+    }
+
+    // Для ngrok URL используем blob с кэшированием
     let cancelled = false
 
     // Загружаем изображение через useApi с обходом предупреждения ngrok
@@ -25,19 +38,19 @@ export const useProxiedImageUrl = (url: string | null | undefined): string | nul
         const urlObj = new URL(url)
         const path = urlObj.pathname + urlObj.search
 
-        const response = await api.get(path, {
-          responseType: 'blob',
+        // Используем loadAndCacheImage для кэширования и защиты от параллельных загрузок
+        const blobUrl = await loadAndCacheImage(url, async () => {
+          const response = await api.get(path, {
+            responseType: 'blob',
+          })
+          return response.data as Blob
         })
 
-        const blob = response.data as Blob
-        
         // Проверяем, не был ли эффект отменен во время загрузки
         if (cancelled) {
-          URL.revokeObjectURL(URL.createObjectURL(blob))
           return
         }
 
-        blobUrl = URL.createObjectURL(blob)
         setImageUrl(blobUrl)
       } catch (err) {
         if (!cancelled) {
@@ -50,13 +63,11 @@ export const useProxiedImageUrl = (url: string | null | undefined): string | nul
     loadImage()
 
     // Очищаем blob URL при размонтировании или изменении URL
+    // Примечание: blob URL не нужно освобождать, так как он управляется кэшем
     return () => {
       cancelled = true
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl)
-      }
     }
-  }, [url, api])
+  }, [url, api, isProxyEnabled])
 
   return imageUrl
 }

@@ -1,4 +1,4 @@
-import { useState, type FC } from "react";
+import { useState, useEffect, type FC } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import type { GiftBackground } from "@/types/gift";
@@ -21,14 +21,37 @@ type Props = {
   title: string
   items: Item[]
   handleSelect: (item: Item) => void
+  query?: string
+  onQueryChange?: (query: string) => void
 }
 
-export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, handleSelect }) => {
-  const [query, setQuery] = useState("");
+export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, handleSelect, query: externalQuery, onQueryChange }) => {
+  const [internalQuery, setInternalQuery] = useState("");
+  const query = externalQuery !== undefined ? externalQuery : internalQuery
+  
+  const setQuery = (value: string) => {
+    if (externalQuery !== undefined && onQueryChange) {
+      onQueryChange(value)
+    } else {
+      setInternalQuery(value)
+    }
+  }
 
-  const filtered = items.filter((item) =>
-    item.title.toLowerCase().includes(query.toLowerCase())
-  );
+  // Сбрасываем query при закрытии drawer
+  useEffect(() => {
+    if (!open) {
+      if (externalQuery !== undefined && onQueryChange) {
+        onQueryChange('')
+      } else {
+        setInternalQuery('')
+      }
+    }
+  }, [open, externalQuery, onQueryChange])
+
+  const filtered = items.filter((item) => {
+    if (!item.title) return false
+    return item.title.toLowerCase().includes(query.toLowerCase())
+  });
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>

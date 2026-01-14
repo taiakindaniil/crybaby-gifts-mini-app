@@ -1,25 +1,18 @@
 import type { FC } from 'react'
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { Copy, Check, Pencil } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { EditBioDialog } from './EditBioDialog'
-
-interface TelegramUser {
-  id: number;
-  first_name?: string;
-  last_name?: string;
-  username?: string;
-  photo_url?: string;
-  bio?: string;
-}
+import type { TelegramUser } from '@/api/user'
 
 interface ProfileCardProps {
   user?: TelegramUser;
+  isOwnProfile?: boolean;
 }
 
-export const ProfileCard: FC<ProfileCardProps> = ({ user }) => {
+export const ProfileCard: FC<ProfileCardProps> = ({ user, isOwnProfile = false }) => {
     const [copied, setCopied] = useState(false)
     const [isEditBioDialogOpen, setIsEditBioDialogOpen] = useState(false)
     const [bio, setBio] = useState(user?.bio || "What doesn't kill you makes you stronger.")
@@ -83,30 +76,33 @@ export const ProfileCard: FC<ProfileCardProps> = ({ user }) => {
                     </div>
 
                     <Separator />
-
                     {/* Description */}
                     <div className="py-1">
                         <p className="text-sm text-muted-foreground mb-1">bio</p>
                         <div className="flex items-center gap-2">
                             <p className="text-m text-foreground flex-1 break-words overflow-wrap-anywhere overflow-x-hidden" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{bio}</p>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => setIsEditBioDialogOpen(true)}
-                            >
-                                <Pencil className="w-4 h-4" />
-                            </Button>
+                            {isOwnProfile && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => setIsEditBioDialogOpen(true)}
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
             </CardContent>
-            <EditBioDialog 
-                open={isEditBioDialogOpen} 
-                onOpenChange={setIsEditBioDialogOpen}
-                currentBio={bio}
-                onBioUpdated={setBio}
-            />
+            {isOwnProfile && (
+                <EditBioDialog 
+                    open={isEditBioDialogOpen} 
+                    onOpenChange={setIsEditBioDialogOpen}
+                    currentBio={bio}
+                    onBioUpdated={setBio}
+                />
+            )}
         </Card>
     )
 }

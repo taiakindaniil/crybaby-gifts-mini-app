@@ -1,13 +1,13 @@
 import type { FC } from "react";
 import { useState } from "react";
-import { popup } from "@telegram-apps/sdk-react";
+import { popup, retrieveLaunchParams } from "@telegram-apps/sdk-react";
 import { toast } from "sonner";
 import { GiftCard } from "./GiftCard";
 import type { Gift } from '@/types/gift';
 import { Button } from '../ui/button';
 import { useGiftStore } from '@/stores/giftStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addRow, deleteGrid, updateGiftCell, type Grid } from '@/api/gifts';
+import { addRow, deleteGrid, swapGiftCells, type Grid, type Cell } from '@/api/gifts';
 import {
   DndContext,
   closestCenter,
@@ -23,7 +23,9 @@ import {
 
 type GiftGridProps = {
   gridId: number
-  rows: (Gift | null)[][]
+  rows: Cell[][]
+  isMainAlbum?: boolean
+  isOwnProfile?: boolean
 }
 
 type CellId = `${number}-${number}`
@@ -41,19 +43,23 @@ type DraggableCellProps = {
   id: CellId
   rowIndex: number
   cellIndex: number
-  gift: Gift | null
+  cell: Cell
+  isOwnProfile: boolean
   onClick: () => void
   isOver?: boolean
 }
 
-const DraggableCell: FC<DraggableCellProps> = ({ id, gift, onClick, isOver }) => {
+const DraggableCell: FC<DraggableCellProps> = ({ id, cell, onClick, isOver, isOwnProfile }) => {
+  const gift = cell.gift
+  const isPinned = cell.pinned || false
+  
   const {
     attributes,
     listeners,
     setNodeRef,
   } = useDraggable({
     id,
-    disabled: !gift, // Пустые ячейки не перетаскиваются
+    disabled: !gift || isPinned || !isOwnProfile, // Пустые ячейки, закрепленные подарки и на чужом профиле не перетаскиваются
   });
 
   const {
@@ -69,11 +75,13 @@ const DraggableCell: FC<DraggableCellProps> = ({ id, gift, onClick, isOver }) =>
         setNodeRef(node);
         setDroppableRef(node);
       }}
-      className={`${isDroppableOver || isOver ? 'ring-1 ring-primary rounded-lg ring-offset-1' : ''}`}
+      className={`relative ${isDroppableOver || isOver ? 'ring-1 ring-primary rounded-lg ring-offset-1' : ''}`}
     >
-      <div {...attributes} {...listeners}>
+      <div {...(isOwnProfile ? { ...attributes, ...listeners } : {})}>
         <GiftCard
           gift={gift}
+          isPinned={isPinned}
+          isOwnProfile={isOwnProfile}
           onClick={onClick}
         />
       </div>
@@ -81,9 +89,16 @@ const DraggableCell: FC<DraggableCellProps> = ({ id, gift, onClick, isOver }) =>
   );
 };
 
-export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
+export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false, isOwnProfile = false }) => {
+  // isMainAlbum может использоваться для дополнительной логики в будущем
+  // например, для визуального выделения main album или специальных функций
+  void isMainAlbum; // Suppress unused variable warning
   const setSelectedCell = useGiftStore().setSelectedCell;
   const queryClient = useQueryClient();
+  
+  // Получаем user.id для правильного query key
+  const lp = retrieveLaunchParams();
+  const userId = lp.tgWebAppData?.user?.id;
 
   // Настройка сенсоров для drag and drop
   const sensors = useSensors(
@@ -104,7 +119,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   const addRowMutation = useMutation({
     mutationFn: () => addRow(gridId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grids'] })
+      queryClient.invalidateQueries({ queryKey: ['grids', userId] })
     },
     onError: (error) => {
       toast("Can't add row", {
@@ -116,7 +131,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   const deleteGridMutation = useMutation({
     mutationFn: () => deleteGrid(gridId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grids'] })
+      queryClient.invalidateQueries({ queryKey: ['grids', userId] })
       toast("Album deleted", {
         description: 'New album has been successfully deleted.',
       })
@@ -133,34 +148,27 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
       sourceRow, 
       sourceCell, 
       targetRow, 
-      targetCell,
-      sourceGift,
-      targetGift
+      targetCell
     }: { 
       sourceRow: number
       sourceCell: number
       targetRow: number
       targetCell: number
-      sourceGift: Gift | null
-      targetGift: Gift | null
+      sourceGift?: Gift | null
+      targetGift?: Gift | null
     }) => {
-      // Используем данные, переданные из onMutate через параметры
-      await Promise.all([
-        updateGiftCell(gridId, sourceRow, sourceCell, targetGift),
-        updateGiftCell(gridId, targetRow, targetCell, sourceGift),
-      ])
+      // Атомарный свап через один запрос
+      await swapGiftCells(gridId, sourceRow, sourceCell, targetRow, targetCell)
     },
     onMutate: async ({ sourceRow, sourceCell, targetRow, targetCell, sourceGift, targetGift }) => {
       // Отменяем исходящие запросы, чтобы не перезаписать optimistic update
-      await queryClient.cancelQueries({ queryKey: ['grids'] })
+      await queryClient.cancelQueries({ queryKey: ['grids', userId] })
       
       // Сохраняем предыдущее значение для отката
-      const previousGrids = queryClient.getQueryData<Grid[]>(['grids'])
+      const previousGrids = queryClient.getQueryData<Grid[]>(['grids', userId])
       
-      // Используем данные из параметров (получены в handleDragEnd из query cache ДО optimistic update)
-
-      // Optimistic update
-      queryClient.setQueryData<Grid[]>(['grids'], (old) => {
+      // Optimistic update - используем данные из параметров для немедленного обновления UI
+      queryClient.setQueryData<Grid[]>(['grids', userId], (old) => {
         if (!old) return old
         
         return old.map(grid => {
@@ -174,7 +182,11 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
               ...newRows[sourceRow],
               cells: [...newRows[sourceRow].cells]
             }
-            newRows[sourceRow].cells[sourceCell] = targetGift
+            const targetCellData = newRows[targetRow]?.cells[targetCell] || { gift: null, pinned: false }
+            newRows[sourceRow].cells[sourceCell] = {
+              ...targetCellData,
+              gift: targetGift ?? null
+            }
           }
 
           if (newRows[targetRow]) {
@@ -182,7 +194,11 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
               ...newRows[targetRow],
               cells: [...newRows[targetRow].cells]
             }
-            newRows[targetRow].cells[targetCell] = sourceGift
+            const sourceCellData = newRows[sourceRow]?.cells[sourceCell] || { gift: null, pinned: false }
+            newRows[targetRow].cells[targetCell] = {
+              ...sourceCellData,
+              gift: sourceGift ?? null
+            }
           }
 
           return {
@@ -192,14 +208,13 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
         })
       })
 
-      // Возвращаем контекст с предыдущими данными
-      // Исходные данные (sourceGift, targetGift) будут использованы в mutationFn через параметры
+      // Возвращаем контекст с предыдущими данными для отката при ошибке
       return { previousGrids }
     },
     onError: (error, _variables, context) => {
       // Откатываем изменения в случае ошибки
       if (context?.previousGrids) {
-        queryClient.setQueryData(['grids'], context.previousGrids)
+        queryClient.setQueryData(['grids', userId], context.previousGrids)
       }
       toast("Error", {
         description: error.message || 'Failed to move gift',
@@ -216,11 +231,19 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   const [overId, setOverId] = useState<CellId | null>(null);
 
   const handleDragStart = (event: { active: { id: string | number } }) => {
+    // На чужом профиле запрещаем drag and drop
+    if (!isOwnProfile) {
+      return;
+    }
     const { active } = event;
     setActiveId(active.id as CellId);
   };
 
   const handleDragOver = (event: { over: { id: string | number } | null }) => {
+    // На чужом профиле запрещаем drag and drop
+    if (!isOwnProfile) {
+      return;
+    }
     const { over } = event;
     if (over) {
       setOverId(over.id as CellId);
@@ -228,6 +251,10 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
   };
 
   const handleDragEnd = (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
+    // На чужом профиле запрещаем drag and drop
+    if (!isOwnProfile) {
+      return;
+    }
     const { active, over } = event;
     setActiveId(null);
     setOverId(null);
@@ -241,7 +268,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
 
     // Получаем исходные данные из query cache ДО вызова мутации
     // Это важно, чтобы получить правильные данные до optimistic update
-    const grids = queryClient.getQueryData<Grid[]>(['grids']) || []
+    const grids = queryClient.getQueryData<Grid[]>(['grids', userId]) || []
     const currentGrid = grids.find(g => g.id === gridId)
     
     if (!currentGrid) {
@@ -251,8 +278,16 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
       return
     }
 
-    const sourceGift = currentGrid.rows[source.rowIndex]?.cells[source.cellIndex] || null
-    const targetGift = currentGrid.rows[target.rowIndex]?.cells[target.cellIndex] || null
+    const sourceCell = currentGrid.rows[source.rowIndex]?.cells[source.cellIndex] || { gift: null, pinned: false }
+    const targetCell = currentGrid.rows[target.rowIndex]?.cells[target.cellIndex] || { gift: null, pinned: false }
+
+    // Проверяем, не закреплены ли подарки
+    if (sourceCell.pinned || targetCell.pinned) {
+      toast("Error", {
+        description: 'Cannot move pinned gifts',
+      })
+      return
+    }
 
     // Передаем данные вместе с индексами
     swapGiftsMutation.mutate({
@@ -260,8 +295,8 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
       sourceCell: source.cellIndex,
       targetRow: target.rowIndex,
       targetCell: target.cellIndex,
-      sourceGift,
-      targetGift,
+      sourceGift: sourceCell.gift,
+      targetGift: targetCell.gift,
     })
   };
 
@@ -282,7 +317,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
 
   const activeGift = activeId ? (() => {
     const { rowIndex, cellIndex } = parseCellId(activeId);
-    return rows[rowIndex]?.[cellIndex] || null;
+    return rows[rowIndex]?.[cellIndex]?.gift || null;
   })() : null;
   
   return (
@@ -297,7 +332,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
         <div className="space-y-2">
           {rows.map((row, rowIndex) => (
             <div key={rowIndex} className="grid grid-cols-3 gap-2">
-              {row.map((gift, cellIndex) => {
+              {row.map((cell, cellIndex) => {
                 const cellId = createCellId(rowIndex, cellIndex);
                 
                 return (
@@ -306,16 +341,20 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
                     id={cellId}
                     rowIndex={rowIndex}
                     cellIndex={cellIndex}
-                    gift={gift}
+                    cell={cell}
+                    isOwnProfile={isOwnProfile}
                     isOver={overId === cellId && activeId !== cellId}
-                    onClick={() =>
+                    onClick={() => {
+                      // На чужом профиле запрещаем открывать пустые ячейки (и не показываем "+")
+                      if (!isOwnProfile && !cell.gift) return
                       setSelectedCell({
                         gridId,
                         rowIndex,
                         cellIndex,
-                        gift: gift,
+                        gift: cell.gift,
+                        isOwnProfile,
                       })
-                    }
+                    }}
                   />
                 )
               })}
@@ -325,21 +364,31 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows }) => {
 
         <DragOverlay>
           <div className="opacity-80">
-            <GiftCard gift={activeGift} onClick={() => {}} />
+            <GiftCard gift={activeGift} onClick={() => {}} isOwnProfile={true} />
           </div>
         </DragOverlay>
       </DndContext>
 
-      <Button
-        size="default"
-        className="mt-3 h-11 w-full rounded-full bg-card text-foreground font-semibold"
-        onClick={() => addRowMutation.mutate()}
-        disabled={addRowMutation.isPending}
-      >
-        {addRowMutation.isPending ? 'Adding...' : 'Add Row'}
-      </Button>
+      {isOwnProfile && (
+        <>
+          <Button
+            size="default"
+            className="mt-3 h-11 w-full rounded-full bg-card text-foreground font-semibold cursor-pointer"
+            onClick={() => addRowMutation.mutate()}
+            disabled={addRowMutation.isPending}
+          >
+            {addRowMutation.isPending ? 'Adding...' : 'Add Row'}
+          </Button>
 
-      <Button variant="ghost" className="mt-2 w-full" onClick={openPopup}>Delete Album</Button>
+          <Button
+            variant="ghost"
+            className="mt-2 h-11 w-full rounded-full cursor-pointer text-white font-semibold"
+            onClick={openPopup}
+          >
+            Delete Album
+          </Button>
+        </>
+      )}
     </>
   );
 }

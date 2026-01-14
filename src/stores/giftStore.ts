@@ -6,6 +6,11 @@ export interface SelectedCell {
     rowIndex: number;
     cellIndex: number;
     gift?: Gift | null;
+    /**
+     * True if the viewer is the owner of this profile (editable).
+     * False if viewing someone else's profile (read-only).
+     */
+    isOwnProfile?: boolean;
 }
 
 export const giftFields = [
@@ -25,7 +30,7 @@ type GiftStore = {
     editingFieldKey: string | null
     setEditingFieldKey: (key: string | null) => void
 
-    selectField: (key: string, value: string, extra?: any) => void
+    selectField: (key: string, value: string, extra?: unknown, mode?: 'constructor' | 'freeform') => void
 }
 
 export const useGiftStore = create<GiftStore>((set, get) => ({
@@ -36,10 +41,18 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
     editingFieldKey: null,
     setEditingFieldKey: (key) => set(() => ({ editingFieldKey: key })),
   
-    selectField: (key, value, extra) => {
+    selectField: (key, value, extra, mode = 'constructor') => {
       const state = get()
+
+      // Prevent any edits when viewing someone else's profile
+      if (state.selectedCell?.isOwnProfile === false) {
+        return
+      }
+      if (!state.selectedCell) {
+        return
+      }
       
-      let updatedGift = state.selectedCell?.gift
+      let updatedGift = state.selectedCell.gift
 
       if (key.toString() === 'gifts') {
         if (state.selectedCell?.gift) {
@@ -49,6 +62,8 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
               model: undefined,
               pattern: undefined,
               background: undefined,
+              // В freeform режиме id всегда 0
+              id: mode === 'freeform' ? 0 : (state.selectedCell.gift.id ?? 0),
             }
         } else {
             updatedGift = {
@@ -68,15 +83,29 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
           model: value,
           background: undefined,
           pattern: undefined,
+          // В freeform режиме id всегда 0
+          id: mode === 'freeform' ? 0 : (state.selectedCell.gift.id ?? 0),
         }
       }
   
       // Если фон — обновляем background
-      if (state.selectedCell?.gift && key.toString() === 'background' && extra?.background) {
+      if (
+        state.selectedCell?.gift &&
+        key.toString() === 'background' &&
+        typeof extra === 'object' &&
+        extra !== null &&
+        'background' in extra
+      ) {
+        const background = (extra as { background?: Gift['background'] }).background
+        if (!background) {
+          return
+        }
         updatedGift = {
           ...state.selectedCell.gift,
-          background: extra.background,
+          background,
           pattern: undefined,
+          // В freeform режиме id всегда 0
+          id: mode === 'freeform' ? 0 : (state.selectedCell.gift.id ?? 0),
         }
       }
 
@@ -84,19 +113,29 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
         updatedGift = {
           ...state.selectedCell.gift,
           pattern: value,
+          // В freeform режиме id всегда 0, в constructor сохраняем текущий id
+          id: mode === 'freeform' ? 0 : (state.selectedCell.gift.id ?? 0),
         }
       }
 
       if (state.selectedCell?.gift && key.toString() === 'id') {
-        updatedGift = {
-          ...state.selectedCell.gift,
-          id: Number(value),
+        // В freeform режиме не устанавливаем id (оставляем 0)
+        if (mode === 'freeform') {
+          updatedGift = {
+            ...state.selectedCell.gift,
+            id: 0,
+          }
+        } else {
+          updatedGift = {
+            ...state.selectedCell.gift,
+            id: Number(value),
+          }
         }
       }
 
-      const updatedCell = {
+      const updatedCell: SelectedCell = {
         ...state.selectedCell,
-        gift: updatedGift
+        gift: updatedGift,
       }
   
       set({

@@ -3,16 +3,31 @@
  */
 
 const PROXY_SERVER = 'https://upright-mighty-colt.ngrok-free.app/proxy/image/'
+const IMAGE_PROXY_SETTING_KEY = 'image-proxy-enabled'
+
+/**
+ * Проверяет, включено ли проксирование изображений
+ */
+const isImageProxyEnabled = (): boolean => {
+  const stored = localStorage.getItem(IMAGE_PROXY_SETTING_KEY)
+  // По умолчанию включено (true), если значение не сохранено
+  return stored === null ? true : stored === 'true'
+}
 
 /**
  * Проксирует URL изображения через сервер
+ * Если проксирование отключено, возвращает оригинальный URL
  */
 export const proxyImageUrl = (url: string): string => {
+  if (!isImageProxyEnabled()) {
+    return url
+  }
   return `${PROXY_SERVER}?url=${encodeURIComponent(url)}`
 }
 
 /**
  * Проксирует URL Lottie файла через сервер
+ * Lottie файлы ВСЕГДА загружаются через прокси
  */
 export const proxyLottieUrl = (url: string): string => {
   return `${PROXY_SERVER}?url=${encodeURIComponent(url)}`

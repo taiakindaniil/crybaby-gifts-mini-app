@@ -8,8 +8,11 @@ export const useApi = () => {
   const initDataRaw = useSignal(_initDataRaw);
 
   useEffect(() => {
+    if (initDataRaw) {
     setInitData(initDataRaw);
-    return () => setInitData(undefined);
+    }
+    // Don't clear initData on unmount, as other components might need it
+    // return () => setInitData(undefined);
   }, [initDataRaw]);
 
   return apiClient;

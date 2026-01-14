@@ -41,7 +41,7 @@ export const GiftPreview: FC<GiftPreviewProps> = ({ gift, onDelete }) => {
             Open in Telegram
           </a>
         )}
-        {gift.id > 0 && onDelete && (
+        {onDelete && (
           <button
             className="flex h-9 w-13 items-center justify-center rounded-full bg-white/15 backdrop-blur text-white z-20 relative active:scale-95 transition-transform cursor-pointer"
             onClick={(e) => {

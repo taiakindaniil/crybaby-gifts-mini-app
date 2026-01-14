@@ -1,10 +1,17 @@
 import apiClient from './apiClient';
 import type { Gift } from '@/types/gift';
 
+// Тип для ячейки с информацией о закреплении
+export interface Cell {
+    gift: Gift | null;
+    pinned?: boolean;
+    pinned_position?: number | null;
+}
+
 // Типы для гридов и строк
 export interface GridRow {
     row_index: number;
-    cells: (Gift | null)[];
+    cells: Cell[];
 }
 
 export interface Grid {
@@ -32,7 +39,45 @@ export const getGrids = async (userId: number): Promise<Grid[]> => {
       name: grid.name,
       rows: grid.rows.map((row: any) => ({
         row_index: row.row_index,
-        cells: row.cells.map((cell: (Gift | null)) => (cell ? cell : null)),
+        cells: row.cells.map((cell: any): Cell => {
+          // Если cell - null, возвращаем пустую ячейку
+          if (!cell) {
+            return {
+              gift: null,
+              pinned: false,
+              pinned_position: null
+            };
+          }
+          
+          // Если cell уже имеет структуру Cell с полем gift
+          if (cell && 'gift' in cell) {
+            return {
+              gift: cell.gift || null,
+              pinned: cell.pinned || false,
+              pinned_position: cell.pinned_position ?? null
+            };
+          }
+          
+          // Если cell - это Gift с полями pinned/pinned_position напрямую (структура с бэкенда)
+          // Бэкенд возвращает подарок с полями pinned и pinned_position прямо в объекте подарка
+          const pinned = cell.pinned === true || cell.pinned === false ? cell.pinned : false;
+          const pinnedPosition = cell.pinned_position !== undefined ? cell.pinned_position : null;
+          
+          // Создаем чистый объект подарка без полей pinned/pinned_position
+          const gift: Gift = {
+            id: cell.id,
+            name: cell.name,
+            model: cell.model,
+            background: cell.background,
+            pattern: cell.pattern
+          };
+          
+          return {
+            gift: gift,
+            pinned: pinned,
+            pinned_position: pinnedPosition
+          };
+        }),
       })),
     }));
 };
@@ -68,5 +113,41 @@ export const updateGiftCell = async (
     return await apiClient.put(
       `/grids/${gridId}/rows/${rowIndex}/cells/${cellIndex}`,
       { gift }
+    )
+}
+
+// POST атомарный свап двух ячеек
+export const swapGiftCells = async (
+    gridId: number,
+    sourceRow: number,
+    sourceCell: number,
+    targetRow: number,
+    targetCell: number
+) => {
+    return await apiClient.post(
+        `/grids/${gridId}/cells/swap`,
+        {
+            source: {
+                row_index: sourceRow,
+                cell_index: sourceCell
+            },
+            target: {
+                row_index: targetRow,
+                cell_index: targetCell
+            }
+        }
+    )
+}
+
+// POST закрепление/открепление подарка
+export const togglePinGift = async (
+    gridId: number,
+    rowIndex: number,
+    cellIndex: number,
+    pinned: boolean
+) => {
+    return await apiClient.post(
+        `/grids/${gridId}/cells/${rowIndex}/${cellIndex}/pin`,
+        { pinned }
     )
 }

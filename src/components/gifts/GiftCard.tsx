@@ -2,19 +2,26 @@ import type { FC } from 'react'
 // import { GiftAnimation } from './GiftAnimation'
 import type { Gift } from '@/types/gift'
 import { PatternBackground } from './PatternBackground'
-import { Plus } from 'lucide-react'
+import { Pin, Plus } from 'lucide-react'
 import { buildGiftModelUrl, buildGiftPatternUrl } from '@/lib/giftUrls'
 import { ProxiedImage } from '@/components/ui/ProxiedImage'
 
 type Props = {
   gift?: Gift | null
+  isPinned?: boolean
+  isOwnProfile?: boolean
   onClick: () => void
 }
 
 export const GiftCard: FC<Props> = ({ 
   gift, 
+  isPinned,
+  isOwnProfile = true,
   onClick,
 }) => {
+  const isEmpty = !gift
+  const isClickable = !isEmpty || isOwnProfile
+
   return (
     <div
       style={{
@@ -22,9 +29,14 @@ export const GiftCard: FC<Props> = ({
           background: `radial-gradient(circle, ${gift.background.hex.centerColor} 0%, ${gift.background.hex.edgeColor} 100%)`
         } : {})
       }}
-      className={`${!gift?.background ? 'bg-card' : ''} border-0 relative aspect-square rounded-lg flex items-center justify-center border border-border/50 cursor-pointer active:scale-95 transition-transform select-none overflow-hidden`}
-      onClick={onClick}
+      className={`${!gift?.background ? 'bg-card' : ''} border-0 relative aspect-square rounded-lg flex items-center justify-center border border-border/50 ${isClickable ? 'cursor-pointer active:scale-95' : 'cursor-default'} transition-transform select-none overflow-hidden`}
+      onClick={isClickable ? onClick : undefined}
     >
+      {isPinned && (
+        <div className="absolute top-1 left-2 z-10 rounded-full p-1">
+          <Pin className="w-3 h-3 text-white" />
+        </div>
+      )}
       <div className="relative h-full w-full flex items-center justify-center overflow-hidden rounded-lg">
         {gift && <>
           {gift?.pattern && <PatternBackground
@@ -47,9 +59,10 @@ export const GiftCard: FC<Props> = ({
             <ProxiedImage src={buildGiftModelUrl(gift.name, gift.model || 'Original')} className="w-2/3 h-full/2" />
             {/* <GiftAnimation gift={gift} autoplay={false} className="w-2/3 h-full/2" /> */}
           </div>
-        </> || <>
-          <><Plus className="text-foreground/60" /></>
-        </>}
+        </> || (
+          // На чужом профиле не показываем "+" в пустых ячейках
+          isOwnProfile ? <Plus className="text-foreground/60" /> : null
+        )}
       </div>
     </div>
   )

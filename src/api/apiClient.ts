@@ -47,4 +47,7 @@ export const setInitData = (initData: string | undefined) => {
   currentInitData = initData;
 };
 
+// Helper function to get current initData (for debugging)
+export const getInitData = () => currentInitData;
+
 export default apiClient; 

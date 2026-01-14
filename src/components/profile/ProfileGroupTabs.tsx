@@ -18,12 +18,12 @@ interface TelegramUser {
   photo_url?: string;
 }
 
-export default function ProfileGroupTabs({ user }: { user: TelegramUser }) {
+export default function ProfileGroupTabs({ user, isOwnProfile = false }: { user: TelegramUser; isOwnProfile?: boolean }) {
     const [activeTab, setActiveTab] = useState<string | undefined>(undefined)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const navigate = useNavigate()
 
-    const { data: grids = [], isLoading } = useQuery({queryKey: ['grids'], queryFn: () => getGrids(user.id)});
+    const { data: grids = [], isLoading } = useQuery({queryKey: ['grids', user.id], queryFn: () => getGrids(user.id)});
     const hasActiveSubscription = useHasActiveSubscription();
 
     const handleTabChange = (value: string) => {
@@ -64,21 +64,24 @@ export default function ProfileGroupTabs({ user }: { user: TelegramUser }) {
                   <span>{grid.name}</span>
                 </TabsTrigger>
               ))}
-              <TabsTrigger
-                key="add_album"  
-                value="add_album"
-                onClick={() => {return}}
-                className="px-3 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-muted dark:!data-[state=active]:bg-muted rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none whitespace-nowrap shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                + Add Album
-              </TabsTrigger>
+              {isOwnProfile && (
+                <TabsTrigger
+                  key="add_album"  
+                  value="add_album"
+                  onClick={() => {return}}
+                  className="px-3 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-muted dark:!data-[state=active]:bg-muted rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none whitespace-nowrap shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  + Add Album
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
           {/* Gifts Content */}
           {grids.map((grid, index) => {
-            // Если нет подписки и это не первый альбом, показываем призыв купить подписку
-            const showSubscriptionPrompt = !hasActiveSubscription && index !== 0;
+            // На чужом профиле НЕ показываем paywall "Subscribe to unlock this album"
+            // Paywall уместен только на собственном профиле (ограничение функционала для текущего пользователя).
+            const showSubscriptionPrompt = isOwnProfile && !hasActiveSubscription && index !== 0;
             
             return (
               <TabsContent key={grid.id} value={String(grid.id)} className="px-4 overflow-x-hidden">
@@ -100,7 +103,12 @@ export default function ProfileGroupTabs({ user }: { user: TelegramUser }) {
                     </Button>
                   </div>
                 ) : (
-                  <GiftGrid gridId={grid.id} rows={grid.rows.map(r => r.cells)} />
+                  <GiftGrid 
+                    gridId={grid.id} 
+                    rows={grid.rows.map(r => r.cells)} 
+                    isMainAlbum={index === 0}
+                    isOwnProfile={isOwnProfile}
+                  />
                 )}
               </TabsContent>
             );

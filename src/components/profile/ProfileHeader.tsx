@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getGrids } from '@/api/gifts'
 import { buildGiftModelUrl } from '@/lib/giftUrls'
 import { ProxiedImage } from '@/components/ui/ProxiedImage'
+import { ProfileViewCounter } from './ProfileViewCounter'
 import type { Gift } from '@/types/gift'
 
 interface TelegramUser {
@@ -15,20 +16,29 @@ interface TelegramUser {
   last_name?: string;
   username?: string;
   photo_url?: string;
+  subscription_active?: boolean;
+  view_count?: number;
+  unique_view_count?: number;
 }
 
 interface ProfileHeaderProps {
   user?: TelegramUser;
+  isOwnProfile?: boolean;
 }
 
-export const ProfileHeader: FC<ProfileHeaderProps> = ({ user }) => {
+export const ProfileHeader: FC<ProfileHeaderProps> = ({ user, isOwnProfile = false }) => {
     // Получаем данные пользователя
     const userName = user ? `${user.first_name}${user.last_name ? ` ${user.last_name}` : ''}` : 'User'
     const userInitials = user 
         ? `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase() || 'U'
         : 'U'
 
-    const hasActiveSubscription = useHasActiveSubscription();
+    // Получаем статус подписки
+    // Для собственного профиля используем хук, для чужого - данные из user
+    const subscriptionStatus = useHasActiveSubscription();
+    const hasActiveSubscription = isOwnProfile 
+        ? subscriptionStatus 
+        : (user?.subscription_active ?? false);
 
     // Получаем гриды пользователя
     const { data: grids = [] } = useQuery({
@@ -37,35 +47,30 @@ export const ProfileHeader: FC<ProfileHeaderProps> = ({ user }) => {
         enabled: !!user?.id,
     })
 
-    // Извлекаем все подарки с моделями из всех гридов
+    // Извлекаем только закрепленные подарки с моделями из main album (первый grid)
+    // Берем по порядку из первых двух рядов (rows 0-1, cells 0-2)
     const giftModels = useMemo(() => {
-        const allGifts: Gift[] = []
+        if (grids.length === 0) return []
         
-        grids.forEach((grid) => {
-            grid.rows.forEach((row) => {
-                row.cells.forEach((cell) => {
-                    if (cell && cell.model) {
-                        allGifts.push(cell)
-                    }
-                })
-            })
-        })
-
-        // Возвращаем только первые 6 уникальных подарков с моделями
-        // Используем Set для отслеживания уникальных комбинаций name + model
-        const seen = new Set<string>()
-        const uniqueGifts: Gift[] = []
+        const mainAlbum = grids[0] // Первый grid - это main album
+        const pinnedGifts: Gift[] = []
         
-        for (const gift of allGifts) {
-            const key = `${gift.name}-${gift.model}`
-            if (!seen.has(key)) {
-                seen.add(key)
-                uniqueGifts.push(gift)
-                if (uniqueGifts.length >= 6) break
+        // Собираем закрепленные подарки с моделями из первых двух рядов по порядку
+        for (let rowIdx = 0; rowIdx < 2 && pinnedGifts.length < 6; rowIdx++) {
+            const row = mainAlbum.rows[rowIdx]
+            if (!row) continue
+            
+            for (let cellIdx = 0; cellIdx < 3 && cellIdx < row.cells.length && pinnedGifts.length < 6; cellIdx++) {
+                const cell = row.cells[cellIdx]
+                // Берем только закрепленные подарки с моделями
+                if (cell && cell.gift && cell.gift.model && cell.pinned) {
+                    pinnedGifts.push(cell.gift)
+                }
             }
         }
         
-        return uniqueGifts
+        // Возвращаем до 6 закрепленных подарков
+        return pinnedGifts.slice(0, 6)
     }, [grids])
 
     // Генерируем случайные позиции для подарков в пределах заданных диапазонов
@@ -150,7 +155,14 @@ export const ProfileHeader: FC<ProfileHeaderProps> = ({ user }) => {
                 )}
             </div>
             
-            <p className="text-sm text-muted-foreground mb-4">online</p>
+            <p className="text-sm text-muted-foreground mb-4">
+                {isOwnProfile ? 'online' : 'last seen recently'}
+            </p>
+            
+            <ProfileViewCounter 
+                viewCount={user?.view_count}
+                uniqueViewCount={user?.unique_view_count}
+            />
         </div>
     )
 }

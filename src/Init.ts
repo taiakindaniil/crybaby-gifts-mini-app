@@ -15,8 +15,10 @@ import {
   swipeBehavior,
   // setMiniAppHeaderColor,
   themeParams,
-  miniApp
+  miniApp,
+  initDataRaw
 } from '@telegram-apps/sdk-react';
+import { setInitData } from './api/apiClient';
   
 /**
  * Initializes the application and configures its dependencies.
@@ -75,6 +77,16 @@ export async function init(options: {
   // Mount all components used in the project.
   mountBackButton.ifAvailable();
   restoreInitData();
+
+  // Set initData globally for API client
+  // Get initDataRaw from SDK after initialization
+  const initData = initDataRaw();
+  if (initData) {
+    console.log('Setting initData globally:', initData.substring(0, 50) + '...');
+    setInitData(initData);
+  } else {
+    console.warn('initData not available during initialization, will be set by useApi hook');
+  }
 
   // Safe to call in any order.
   themeParams.mountSync();

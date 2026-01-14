@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { useMemo } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { Page } from '@/components/Page'
 import { GiftDrawer } from '@/components/gifts/GiftDrawer'
 import { retrieveLaunchParams } from '@telegram-apps/sdk-react'
@@ -7,19 +7,98 @@ import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileCard } from '@/components/profile/ProfileCard'
 import ProfileTabs from '@/components/profile/ProfileTabs'
 import { Button } from '@/components/ui/button'
-import { Settings } from "lucide-react"
+import { Settings, Share2 } from "lucide-react"
 import { Link } from 'react-router-dom';
 import { SubscriptionItem } from '@/components/subscription/SubscriptionItem'
+import { generateProfileShareLink } from '@/lib/shareProfile'
+import { trackProfileView, getUser, type TelegramUser } from '@/api/user'
+import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
+import { Spinner } from '@/components/ui/spinner'
 
 export const IndexPage: FC = () => {
   const lp = useMemo(() => retrieveLaunchParams(), []);
-  const user = lp.tgWebAppData?.user
+  const telegramUser = lp.tgWebAppData?.user
+  const hasTrackedView = useRef(false)
+
+  // Загружаем данные пользователя с сервера для получения bio
+  const { data: user, isLoading: isLoadingUser } = useQuery<TelegramUser>({
+    queryKey: ['user', telegramUser?.id],
+    queryFn: () => getUser(telegramUser!.id),
+    enabled: !!telegramUser?.id,
+  })
+
+  // Отслеживаем просмотр своего профиля при загрузке
+  useEffect(() => {
+    // Отслеживаем только если пользователь загружен и еще не отслеживали просмотр
+    if (telegramUser?.id && !hasTrackedView.current) {
+      hasTrackedView.current = true
+      trackProfileView(telegramUser.id).catch((error) => {
+        // Тихая обработка ошибок - не критично, если не удалось зарегистрировать просмотр
+        console.warn('Failed to track profile view:', error)
+      })
+    }
+  }, [telegramUser?.id])
+
+  const handleShareProfile = async () => {
+    if (!telegramUser?.id) return
+
+    const shareLink = generateProfileShareLink(telegramUser.id)
+    
+    // Пытаемся использовать Telegram WebApp API для шейринга
+    const win = window as unknown as Record<string, unknown>
+    const telegram = win.Telegram as Record<string, unknown> | undefined
+    const webApp = telegram?.WebApp as Record<string, unknown> | undefined
+    const openTelegramLink = webApp?.openTelegramLink as ((url: string) => void) | undefined
+    
+    if (openTelegramLink && typeof openTelegramLink === 'function') {
+        try {
+            openTelegramLink(shareLink)
+            toast("Opening share dialog...")
+        } catch {
+            // Fallback: копируем в буфер обмена
+            navigator.clipboard.writeText(shareLink)
+            toast("Profile link copied to clipboard", {
+                description: 'Share this link with others to view your profile'
+            })
+        }
+    } else {
+        // Fallback: копируем в буфер обмена
+        navigator.clipboard.writeText(shareLink)
+        toast("Profile link copied to clipboard", {
+            description: 'Share this link with others to view your profile'
+        })
+    }
+  }
+
+  // Показываем спиннер пока загружаются данные пользователя
+  if (isLoadingUser) {
+    return (
+      <Page back={false}>
+        <div className="flex w-full justify-center items-center min-h-[50vh]">
+          <Spinner className="size-8" />
+        </div>
+      </Page>
+    )
+  }
+
+  // Используем данные с сервера, если они загружены, иначе данные из Telegram
+  const displayUser = user || telegramUser
 
   return (
     <Page back={false}>
       <div className="w-full">
 
-        <div className="flex mt-2">
+        <div className="flex items-center gap-2 mt-2">
+          <Button 
+            size="lg" 
+            variant="ghost" 
+            aria-label="share profile" 
+            className="ml-2"
+            onClick={handleShareProfile}
+          >
+            <Share2 className="size-5" />
+          </Button>
           <Button size="lg" variant="ghost" aria-label="settings" className="ml-auto mr-2">
             <Link to="/settings">
               <Settings className="size-5" />
@@ -29,11 +108,11 @@ export const IndexPage: FC = () => {
 
         <SubscriptionItem />
 
-        <ProfileHeader user={user} />
+        <ProfileHeader user={displayUser} isOwnProfile={true} />
 
-        <ProfileCard user={user} />
+        <ProfileCard user={displayUser} isOwnProfile={true} />
 
-        <ProfileTabs user={user} />
+        <ProfileTabs user={displayUser} isOwnProfile={true} />
 
         <div className="py-5 px-4 text-foreground/50 text-center text-sm">
           Big thanks to <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> and <a href="https://t.me/proTON_priTON" className="text-primary">@proTON_priTON</a> for API

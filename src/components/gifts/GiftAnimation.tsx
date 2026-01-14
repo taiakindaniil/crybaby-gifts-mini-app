@@ -15,16 +15,21 @@ type GiftAnimationProps = {
 export const GiftAnimation: FC<GiftAnimationProps> = ({ gift, className, autoplay }) => {
     const lottieURL = getLottieURL(gift)
     const api = useApi()
-
+    
     const { data: animationData } = useQuery({
         queryKey: ['lottie', lottieURL],
         enabled: !!lottieURL,
         queryFn: async () => {
             if (!lottieURL) throw new Error('Lottie URL is not available')
             
-            const url = proxyLottieUrl(lottieURL)
+            // Всегда используем прокси для Lottie файлов
+            const proxiedUrl = proxyLottieUrl(lottieURL)
+            
+            // Извлекаем путь из полного URL для использования с apiClient
+            const url = new URL(proxiedUrl)
+            const path = url.pathname + url.search
 
-            const res = await api.get(url)
+            const res = await api.get(path)
             return res.data
         },
         staleTime: Infinity, // кеш всегда свежий
