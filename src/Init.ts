@@ -96,7 +96,7 @@ export async function init(options: {
 
   if (mountViewport.isAvailable()) {
     mountViewport()
-      .then(() => {
+      .then(async () => {
         expandViewport();
         bindViewportCssVars();
         // if (setMiniAppHeaderColor.isAvailable() && setMiniAppHeaderColor.supports.rgb()) {
@@ -104,7 +104,7 @@ export async function init(options: {
         // }
 
         if (requestFullscreen.isAvailable()) {
-          requestFullscreen();
+          await requestFullscreen();
         }
       })
   }
