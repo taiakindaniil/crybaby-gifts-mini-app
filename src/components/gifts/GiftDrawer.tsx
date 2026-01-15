@@ -405,7 +405,7 @@ export const GiftDrawer: FC = () => {
                       >
                         <span>Freeform</span>
                       </TabsTrigger>
-                      <TabsTrigger
+                      {/* <TabsTrigger
                         value="collection"
                         className="px-4 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-card dark:!data-[state=active]:bg-card rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto cursor-pointer"
                         onClick={() => {
@@ -413,7 +413,7 @@ export const GiftDrawer: FC = () => {
                         }}
                       >
                         <span>Collection</span>
-                      </TabsTrigger>
+                      </TabsTrigger> */}
                     </TabsList>
                   </Tabs>
                 </div>
@@ -449,15 +449,19 @@ export const GiftDrawer: FC = () => {
                     <button
                       onClick={handleTogglePin}
                       disabled={togglePinMutation.isPending}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      className={`relative inline-flex h-6 w-11 items-center justify-center rounded-full transition-colors ${
                         isPinned ? 'bg-primary' : 'bg-muted'
                       }`}
                     >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          isPinned ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
+                      {togglePinMutation.isPending ? (
+                        <Spinner className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3" />
+                      ) : (
+                        <span
+                          className={`absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            isPinned ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      )}
                     </button>
                   </div>
                 )}

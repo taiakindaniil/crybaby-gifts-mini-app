@@ -14,7 +14,7 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ['70eac4e25dcc.ngrok-free.app'],
+    allowedHosts: ['70eac4e25dcc.ngrok-free.app', 'crybaby.jetpump.org'],
     // Exposes your dev server and makes it accessible for the devices in the same network.
     host: true,
   },
