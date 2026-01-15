@@ -21,7 +21,7 @@ export const useGiftCollection = (giftName?: string) => {
     queryKey: ['gift-collection', giftName],
     enabled: !!giftName,
     queryFn: async () => {
-      const editedGiftName = giftName!.replace(/\s+/g, '').toLowerCase()
+      const editedGiftName = giftName!.replace(/[\s'-]+/g, '').toLowerCase()
 
       const res = await api.get(`/proxy/api/gifts/${encodeURIComponent(editedGiftName)}`)
       return res.data
