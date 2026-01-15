@@ -4,7 +4,7 @@ import { Toaster } from 'sonner';
 
 export function Layout({ children }: PropsWithChildren) {
   return (
-    <div className="relative flex flex-col h-screen overflow-hidden">
+    <div className="relative flex flex-col h-screen overflow-hidden pt-[calc(var(--tg-viewport-safe-area-inset-top)+10px)]">
       <main className="flex flex-col items-center justify-items-center content-center overflow-y-auto overflow-x-hidden w-full h-full pb-20">
         <div className="mx-auto w-full max-w-[600px]">
           {children}

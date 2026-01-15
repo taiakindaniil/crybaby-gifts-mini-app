@@ -16,7 +16,8 @@ import {
   // setMiniAppHeaderColor,
   themeParams,
   miniApp,
-  initDataRaw
+  initDataRaw,
+  requestFullscreen
 } from '@telegram-apps/sdk-react';
 import { setInitData } from './api/apiClient';
   
@@ -38,6 +39,10 @@ export async function init(options: {
   //   eruda.init();
   //   eruda.position({ x: window.innerWidth - 50, y: 0 });
   // });
+
+  if (requestFullscreen.isAvailable()) {
+    requestFullscreen();
+  }
   
   if (swipeBehavior.mount.isAvailable()) {
     swipeBehavior.mount();
