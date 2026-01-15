@@ -2,7 +2,8 @@
  * Утилиты для построения URL подарков
  */
 
-const PROXY_SERVER = 'https://upright-mighty-colt.ngrok-free.app/proxy/image/'
+import { PROXY_SERVER } from '@/config/env';
+
 const IMAGE_PROXY_SETTING_KEY = 'image-proxy-enabled'
 
 /**

@@ -1,9 +1,9 @@
 import axios, { type AxiosInstance } from 'axios';
-// import { API_BASE_URL } from '@/config';
+import { API_BASE_URL } from '@/config/env';
 
 // Create a custom axios instance with default configuration
 const apiClient: AxiosInstance = axios.create({
-  baseURL: "https://upright-mighty-colt.ngrok-free.app",
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': 'true',
