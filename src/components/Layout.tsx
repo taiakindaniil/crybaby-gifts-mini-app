@@ -1,12 +1,12 @@
 import { type PropsWithChildren } from 'react'
-import TabBar from '@/components/customized/tabs/tabs'
+// import TabBar from '@/components/customized/tabs/tabs'
 import { Toaster } from 'sonner';
 
 export function Layout({ children }: PropsWithChildren) {
   return (
     <div className="relative flex flex-col h-screen overflow-hidden">
-      <main className="flex flex-col items-center justify-items-center content-center overflow-y-auto overflow-x-hidden w-full h-full pb-20">
-        <div className="mx-auto w-full max-w-[600px] pt-[calc(var(--tg-safe-area-inset-top)+var(--tg-viewport-safe-area-inset-top)+10px)]">
+      <main className="flex flex-col items-center justify-items-center content-center overflow-y-auto scrollbar-hide overflow-x-hidden w-full h-full pb-20 pt-[calc(var(--tg-safe-area-inset-top)+var(--tg-viewport-safe-area-inset-top)+10px)]">
+        <div className="mx-auto w-full max-w-[600px]">
           {children}
         </div>
       </main>
