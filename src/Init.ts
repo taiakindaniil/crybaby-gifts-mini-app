@@ -39,10 +39,6 @@ export async function init(options: {
   //   eruda.init();
   //   eruda.position({ x: window.innerWidth - 50, y: 0 });
   // });
-
-  if (requestFullscreen.isAvailable()) {
-    requestFullscreen();
-  }
   
   if (swipeBehavior.mount.isAvailable()) {
     swipeBehavior.mount();
@@ -106,6 +102,10 @@ export async function init(options: {
         // if (setMiniAppHeaderColor.isAvailable() && setMiniAppHeaderColor.supports.rgb()) {
         //   setMiniAppHeaderColor('#000000');
         // }
+
+        if (requestFullscreen.isAvailable()) {
+          requestFullscreen();
+        }
       })
   }
 }
