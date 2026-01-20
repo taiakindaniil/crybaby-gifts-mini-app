@@ -91,7 +91,7 @@ export const SubscriptionPage: FC = () => {
   return (
     <Page back={true}>
       <div className="w-full">
-        <ProxiedImage src={proxyImageUrl("https://cdn.changes.tg/gifts/models/Plush%20Pepe/png/Sunset.png")} alt="Premium" className="mt-8 w-24 h-24 mx-auto" />
+        <ProxiedImage src={proxyImageUrl("https://cdn.changes.tg/gifts/models/Mighty%20Arm/png/Original.png")} alt="Premium" className="mt-8 w-24 h-24 mx-auto" />
         <h1 className="m-4 bold text-2xl font-semibold text-center">Exclusive features</h1>
         <ItemGroup className="bg-card rounded-xl overflow-hidden mx-4">
           {subscriptionItems.map((item) => (

@@ -40,9 +40,9 @@ export const ProfileViewCounter: FC<ProfileViewCounterProps> = ({
   return (
     <Link 
       to="/subscription" 
-      className="flex items-center justify-center gap-1 text-sm text-muted-foreground/50 mb-4 cursor-pointer hover:text-muted-foreground transition-colors"
+      className="flex items-center justify-center gap-1 text-sm text-muted-foreground/90 mb-4 cursor-pointer hover:text-muted-foreground transition-colors"
     >
-      <Eye className="w-3 h-3" />
+      <Eye className="w-3.5 h-3.5" />
       <span className="blur-sm select-none">••• views (••• unique)</span>
     </Link>
   )

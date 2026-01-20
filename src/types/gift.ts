@@ -21,8 +21,10 @@ export type Gift = {
     pattern?: string
 }
 
+import { buildGiftLottieUrl } from '@/lib/giftUrls'
+
 export const getLottieURL = (gift: Gift) => {
     if (!gift.name) return null
-    // console.log(`https://cdn.changes.tg/gifts/models/${encodeURIComponent(gift.name)}/lottie/${encodeURIComponent(gift.model ? "Original" : gift.model!)}.json`)
-    return `https://cdn.changes.tg/gifts/models/${encodeURIComponent(gift.name)}/lottie/${encodeURIComponent(gift.model ? gift.model! : "Original")}.json`
+    const model = gift.model || "Original"
+    return buildGiftLottieUrl(gift.name, model)
 }

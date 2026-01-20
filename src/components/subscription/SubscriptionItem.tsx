@@ -30,7 +30,7 @@ export const SubscriptionItem: FC = () => {
               </ItemContent>
               <div className="w-1/4">
                 <ItemMedia variant="image" className="absolute bottom-0 right-0 p-2 bg-transparent border-none w-28 h-28">
-                  <ProxiedImage src={proxyImageUrl("https://cdn.changes.tg/gifts/models/Plush%20Pepe/png/Sunset.png")} alt="Premium" />
+                  <ProxiedImage src={proxyImageUrl("https://cdn.changes.tg/gifts/models/Mighty%20Arm/png/Original.png")} alt="Premium" />
                 </ItemMedia>
               </div>
             </Link>

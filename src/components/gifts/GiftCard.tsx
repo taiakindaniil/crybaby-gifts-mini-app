@@ -51,7 +51,14 @@ export const GiftCard: FC<Props> = ({
             </div>
           </div>
 
-          <div className="absolute top-2 -right-7 w-25 text-center bg-zinc-800 rotate-45 z-12">
+          <div 
+            style={{
+              ...(gift?.background ? {
+                background: gift.background.hex.edgeColor
+              } : {})
+            }}
+            className={`absolute top-2 -right-7 w-25 text-center ${!gift?.background ? 'bg-zinc-800' : ''} rotate-45 z-12`}
+          >
             <span className="text-xs text-white/80 font-medium">#{gift.id}</span>
           </div>
 
