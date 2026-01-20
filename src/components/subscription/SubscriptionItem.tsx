@@ -16,7 +16,7 @@ export const SubscriptionItem: FC = () => {
 
     return (
       <div className="mx-4 mt-8">
-        <ItemGroup className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-xl border-none">
+        <ItemGroup className="bg-gradient-to-r from-orange-600 to-amber-400 rounded-xl border-none">
           <Item size="default" asChild>
             <Link to="/subscription" className="flex relative cursor-pointer">
               <ItemContent>
