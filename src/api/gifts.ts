@@ -103,6 +103,15 @@ export const addRow = async (gridId: number) => {
   return data;
 };
 
+/**
+ * Delete last row of the grid.
+ * @param gridId - ID of the grid
+ * @returns the deleted row
+ */
+export const deleteLastRow = async (gridId: number) => {
+  const { data } = await apiClient.delete(`/grids/${gridId}/rows/last`);
+  return data;
+};
 
 export const updateGiftCell = async (
     gridId: number,

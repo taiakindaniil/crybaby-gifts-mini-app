@@ -7,7 +7,7 @@ import type { Gift } from '@/types/gift';
 import { Button } from '../ui/button';
 import { useGiftStore } from '@/stores/giftStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addRow, deleteGrid, swapGiftCells, type Grid, type Cell } from '@/api/gifts';
+import { addRow, deleteLastRow, deleteGrid, swapGiftCells, type Grid, type Cell } from '@/api/gifts';
 import {
   DndContext,
   closestCenter,
@@ -123,6 +123,18 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
     },
     onError: (error) => {
       toast("Can't add row", {
+        description: error.message
+      })
+    }
+  })
+
+  const deleteLastRowMutation = useMutation({
+    mutationFn: () => deleteLastRow(gridId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['grids', userId] })
+    },
+    onError: (error) => {
+      toast("Can't delete row", {
         description: error.message
       })
     }
@@ -378,6 +390,15 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
             disabled={addRowMutation.isPending}
           >
             {addRowMutation.isPending ? 'Adding...' : 'Add Row'}
+          </Button>
+
+          <Button
+            size="default"
+            className="mt-2 h-11 w-full rounded-full bg-card text-foreground font-semibold cursor-pointer"
+            onClick={() => deleteLastRowMutation.mutate()}
+            disabled={deleteLastRowMutation.isPending || rows.length <= 1}
+          >
+            {deleteLastRowMutation.isPending ? 'Removing...' : 'Remove Last Row'}
           </Button>
 
           <Button

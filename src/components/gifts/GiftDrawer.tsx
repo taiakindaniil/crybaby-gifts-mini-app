@@ -491,10 +491,12 @@ export const GiftDrawer: FC = () => {
             }
           }}
           title={giftFields.find((f) => f.key === editingFieldKey)?.label ?? ''}
-          items={drawerItems.map((item) => ({
-            ...item,
-            id: String(item.id),
-          }))}
+          items={drawerItems
+            .map((item) => ({
+              ...item,
+              id: String(item.id),
+            }))
+            .sort((a, b) => a.title.localeCompare(b.title))}
           handleSelect={handleSelect}
         />
 
@@ -511,11 +513,13 @@ export const GiftDrawer: FC = () => {
           items={
             collectionQueries.some((q) => q.isLoading)
               ? [] // Показываем спиннер при загрузке
-              : collectionGiftItems.map((item) => ({
-                  id: item.id,
-                  title: item.title,
-                  image: item.image,
-                }))
+              : [...collectionGiftItems]
+                  .sort((a, b) => a.title.localeCompare(b.title))
+                  .map((item) => ({
+                    id: item.id,
+                    title: item.title,
+                    image: item.image,
+                  }))
           }
           handleSelect={(item) => {
             const collectionItem = collectionGiftItems.find((i) => i.id === item.id)
