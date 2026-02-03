@@ -28,6 +28,7 @@ export async function init(options: {
     debug: boolean;
     eruda: boolean;
     mockForMacOS: boolean;
+    platform: string;
 }): Promise<void> {
   // Set @telegram-apps/sdk-react debug mode and initialize it.
   setDebug(options.debug);
@@ -103,7 +104,7 @@ export async function init(options: {
         //   setMiniAppHeaderColor('#000000');
         // }
 
-        if (requestFullscreen.isAvailable()) {
+        if (requestFullscreen.isAvailable() && (options.platform == 'ios' || options.platform == 'android')) {
           await requestFullscreen();
         }
       })
