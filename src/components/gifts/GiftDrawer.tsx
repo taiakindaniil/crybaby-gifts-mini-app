@@ -352,13 +352,41 @@ export const GiftDrawer: FC = () => {
         pinned
       )
     },
-    onError: () => {
+    onMutate: async (pinned: boolean) => {
+      if (!selectedCell || user?.id == null) return undefined
+      const queryKey = ['grids', user.id] as const
+      await queryClient.cancelQueries({ queryKey })
+      const previousGrids = queryClient.getQueryData<Grid[]>(queryKey)
+      queryClient.setQueryData<Grid[]>(queryKey, (old) => {
+        if (!old) return old
+        return old.map((grid) => {
+          if (grid.id !== selectedCell.gridId) return grid
+          return {
+            ...grid,
+            rows: grid.rows.map((row, ri) => {
+              if (ri !== selectedCell!.rowIndex) return row
+              return {
+                ...row,
+                cells: row.cells.map((cell, ci) => {
+                  if (ci !== selectedCell!.cellIndex) return cell
+                  return { ...cell, pinned }
+                }),
+              }
+            }),
+          }
+        })
+      })
+      return { previousGrids }
+    },
+    onError: (_err, _pinned, context) => {
+      if (context?.previousGrids != null && user?.id != null) {
+        queryClient.setQueryData(['grids', user.id], context.previousGrids)
+      }
       toast('Error', {
         description: 'Failed to toggle pin',
       })
     },
     onSuccess: () => {
-      // Обновляем данные с бэкенда без optimistic update
       queryClient.invalidateQueries({ queryKey: ['grids', user?.id] })
     },
   })
