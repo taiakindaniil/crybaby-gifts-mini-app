@@ -6,6 +6,9 @@ import { PROXY_SERVER } from '@/config/env';
 
 const IMAGE_PROXY_SETTING_KEY = 'image-proxy-enabled'
 
+/** Нормализует Unicode-апостроф (U+2019) в ASCII (U+0027) до кодирования URL */
+const normalizeApostrophe = (s: string): string => s.replace(/\u2019/g, "'")
+
 /**
  * Проверяет, включено ли проксирование изображений
  */
@@ -21,7 +24,7 @@ const isImageProxyEnabled = (): boolean => {
  */
 export const proxyImageUrl = (url: string): string => {
   if (!isImageProxyEnabled()) {
-    return url
+    return url.replace(/'/g, '%27')
   }
   return `${PROXY_SERVER}?url=${encodeURIComponent(url)}`
 }
@@ -31,21 +34,27 @@ export const proxyImageUrl = (url: string): string => {
  * Lottie файлы ВСЕГДА загружаются через прокси
  */
 export const proxyLottieUrl = (url: string): string => {
-  return `${PROXY_SERVER}?url=${encodeURIComponent(url)}`
+  return `${PROXY_SERVER}?url=${encodeURIComponent(url).replace(/'/g, '%27')}`
 }
 
 export const buildGiftModelUrl = (giftName: string, model: string): string => {
-  const url = `https://cdn.changes.tg/gifts/models/${encodeURIComponent(giftName)}/png/${encodeURIComponent(model)}.png`.replace(/'/g, "%27")
+  const name = normalizeApostrophe(giftName)
+  const normalizedModel = normalizeApostrophe(model)
+  const url = `https://cdn.changes.tg/gifts/models/${encodeURIComponent(name)}/png/${encodeURIComponent(normalizedModel)}.png`.replace(/'/g, '%27')
   return proxyImageUrl(url)
 }
 
 export const buildGiftPatternUrl = (giftName: string, pattern: string): string => {
-  const url = `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(giftName)}/png/${encodeURIComponent(pattern)}.png`.replace(/'/g, "%27")
+  const name = normalizeApostrophe(giftName)
+  const normalizedPattern = normalizeApostrophe(pattern)
+  const url = `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(name)}/png/${encodeURIComponent(normalizedPattern)}.png`.replace(/'/g, '%27')
   return proxyImageUrl(url)
 }
 
 export const buildGiftLottieUrl = (giftName: string, model: string): string => {
-  const url = `https://cdn.changes.tg/gifts/models/${encodeURIComponent(giftName)}/lottie/${encodeURIComponent(model)}.json`
+  const name = normalizeApostrophe(giftName)
+  const normalizedModel = normalizeApostrophe(model)
+  const url = `https://cdn.changes.tg/gifts/models/${encodeURIComponent(name)}/lottie/${encodeURIComponent(normalizedModel)}.json`.replace(/'/g, '%27')
   return proxyLottieUrl(url)
 }
 

@@ -28,7 +28,7 @@ import { ProxiedImage } from '@/components/ui/ProxiedImage'
 import { useTranslation } from '@/i18n'
 
 export const SubscriptionPage: FC = () => {
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
   const subscriptionItems = [
     {
       title: t('subscription.premiumBadge'),

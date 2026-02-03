@@ -2,18 +2,12 @@ import type { FC } from 'react'
 // import { useMemo } from 'react'
 import { Page } from '@/components/Page'
 import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
-import { BadgeCheckIcon, ChevronRightIcon, Megaphone, CreditCardIcon, MessageSquare, ImageIcon, Languages } from 'lucide-react'
+import { ChevronRightIcon, Megaphone, CreditCardIcon, MessageSquare, ImageIcon, Languages } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useImageProxySetting } from '@/hooks/useImageProxySetting'
 import { useTranslation, type Locale } from '@/i18n'
-// import { GiftDrawer } from '@/components/gifts/GiftDrawer'
-// import { retrieveLaunchParams } from '@telegram-apps/sdk-react'
-// import { ProfileHeader } from '@/components/profile/ProfileHeader'
-// import { ProfileCard } from '@/components/profile/ProfileCard'
-// import ProfileTabs from '@/components/profile/ProfileTabs'
 
-import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 import {
   Select,
@@ -46,13 +40,13 @@ export const SettingsPage: FC = () => {
         {
           title: t('settings.contactSupport'),
           icon: <MessageSquare className="p-1 size-6 bg-[orange] rounded-sm text-white" />,
-          link: 'https://t.me/dnevnik_ton',
+          link: 'https://t.me/GiftOutfit',
           external: true,
         },
         {
           title: t('settings.telegramChannel'),
           icon: <Megaphone className="p-1 size-6 bg-[#72aee6] rounded-sm text-white" />,
-          link: 'https://t.me/dnevnik_ton',
+          link: 'https://t.me/GiftOutfit',
           external: true,
         },
       ],
