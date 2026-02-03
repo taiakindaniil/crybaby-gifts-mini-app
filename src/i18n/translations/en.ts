@@ -117,6 +117,7 @@ export const en = {
     thanks: 'Big thanks to',
     and: 'and',
     forApi: 'for API',
+    developer: 'Developer',
   },
   search: {
     placeholder: 'Search...',

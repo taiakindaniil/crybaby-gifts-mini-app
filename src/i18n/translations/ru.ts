@@ -117,6 +117,7 @@ export const ru = {
     thanks: 'Благодарим',
     and: 'и',
     forApi: 'за API',
+    developer: 'Разработчик',
   },
   search: {
     placeholder: 'Поиск...',

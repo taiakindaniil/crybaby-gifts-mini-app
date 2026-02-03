@@ -116,8 +116,13 @@ export const IndexPage: FC = () => {
 
         <ProfileTabs user={displayUser} isOwnProfile={true} />
 
-        <div className="py-5 px-4 text-foreground/50 text-center text-sm">
-          {t('footer.thanks')} <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> {t('footer.and')} <a href="https://t.me/proTON_priTON" className="text-primary">@proTON_priTON</a> {t('footer.forApi')}
+        <div className="py-5 px-4 text-foreground/50 text-center text-sm space-y-1">
+          <div>
+            {t('footer.thanks')} <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> {t('footer.and')} <a href="https://t.me/proTON_priTON" className="text-primary">@proTON_priTON</a> {t('footer.forApi')}
+          </div>
+          <div>
+            {t('footer.developer')}: <a href="https://t.me/dnevnik_ton" className="text-primary">@dnevnik_ton</a>
+          </div>
         </div>
 
         <GiftDrawer />
