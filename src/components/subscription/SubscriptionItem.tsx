@@ -4,9 +4,11 @@ import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useHasActiveSubscription } from "@/hooks/useSubscription";
 import { proxyImageUrl } from "@/lib/giftUrls";
-import { ProxiedImage } from "@/components/ui/ProxiedImage";
+import { ProxiedImage } from "@/components/ui/ProxiedImage"
+import { useTranslation } from '@/i18n'
 
 export const SubscriptionItem: FC = () => {
+    const { t } = useTranslation()
     const hasActiveSubscription = useHasActiveSubscription();
 
     // Скрываем компонент, если у пользователя уже есть активная подписка
@@ -21,11 +23,11 @@ export const SubscriptionItem: FC = () => {
             <Link to="/subscription" className="flex relative cursor-pointer">
               <ItemContent>
                 <ItemDescription className="text-md font-bold text-blue-50">
-                  Get access to exclusive features
+                  {t('subscription.getAccess')}
                 </ItemDescription>
                 <div className="flex items-center gap-2">
                   <Sparkles className="size-4 text-white/70" />
-                  <span className="text-xs font-medium text-white/70">Learn more</span>
+                  <span className="text-xs font-medium text-white/70">{t('subscription.learnMore')}</span>
                 </div>
               </ItemContent>
               <div className="w-1/4">

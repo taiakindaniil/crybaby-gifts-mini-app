@@ -4,6 +4,7 @@ import { useSignal, isMiniAppDark, retrieveLaunchParams } from '@telegram-apps/s
 import { Layout } from './Layout'
 
 import { ThemeProvider } from '@/components/theme-provider'
+import { I18nProvider } from '@/i18n'
 import { routes } from '@/navigation/routes'
 import { LoadingScreen } from './LoadingScreen'
 import { parseProfileUserIdFromStartParam } from '@/lib/parseDeeplink'
@@ -78,11 +79,13 @@ export function App() {
     <>
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
       <ThemeProvider defaultTheme={isDark ? 'dark' : 'light'} storageKey="vite-ui-theme">
-        <HashRouter>
-          <Layout>
-            <AppRoutes />
-          </Layout>
-        </HashRouter>
+        <I18nProvider>
+          <HashRouter>
+            <Layout>
+              <AppRoutes />
+            </Layout>
+          </HashRouter>
+        </I18nProvider>
       </ThemeProvider>
     </>
   )

@@ -2,10 +2,11 @@ import type { FC } from 'react'
 // import { useMemo } from 'react'
 import { Page } from '@/components/Page'
 import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
-import { BadgeCheckIcon, ChevronRightIcon, Megaphone, CreditCardIcon, MessageSquare, ImageIcon } from 'lucide-react'
+import { BadgeCheckIcon, ChevronRightIcon, Megaphone, CreditCardIcon, MessageSquare, ImageIcon, Languages } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useImageProxySetting } from '@/hooks/useImageProxySetting'
+import { useTranslation, type Locale } from '@/i18n'
 // import { GiftDrawer } from '@/components/gifts/GiftDrawer'
 // import { retrieveLaunchParams } from '@telegram-apps/sdk-react'
 // import { ProfileHeader } from '@/components/profile/ProfileHeader'
@@ -14,50 +15,81 @@ import { useImageProxySetting } from '@/hooks/useImageProxySetting'
 
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
-
-const settingsButtonGroups = [
-  {
-    title: 'Account',
-    items: [
-      {
-        title: 'Subscription',
-        icon: <CreditCardIcon className="p-1 size-6 bg-[#72aee6] rounded-sm text-white" />,
-        link: '/subscription',
-        external: false,
-      },
-    ],
-  },
-  {
-    title: 'Links',
-    items: [
-      {
-        title: 'Contact Support',
-        icon: <MessageSquare className="p-1 size-6 bg-[orange] rounded-sm text-white" />,
-        link: 'https://t.me/dnevnik_ton',
-        external: true,
-      },
-      {
-        title: 'Telegram Channel',
-        icon: <Megaphone className="p-1 size-6 bg-[#72aee6] rounded-sm text-white" />,
-        link: 'https://t.me/dnevnik_ton',
-        external: true,
-      }
-    ],
-  },
-];
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export const SettingsPage: FC = () => {
-//   const lp = useMemo(() => retrieveLaunchParams(), []);
-//   const user = lp.tgWebAppData?.user
+  const { t, locale, setLocale } = useTranslation()
+  const { data: subscription, isLoading, error } = useSubscription()
+  const [isProxyEnabled, setIsProxyEnabled] = useImageProxySetting()
 
-  const { data: subscription, isLoading, error } = useSubscription();
-  const [isProxyEnabled, setIsProxyEnabled] = useImageProxySetting();
+  const settingsButtonGroups = [
+    {
+      title: t('settings.account'),
+      items: [
+        {
+          title: t('settings.subscription'),
+          icon: <CreditCardIcon className="p-1 size-6 bg-[#72aee6] rounded-sm text-white" />,
+          link: '/subscription',
+          external: false,
+        },
+      ],
+    },
+    {
+      title: t('settings.links'),
+      items: [
+        {
+          title: t('settings.contactSupport'),
+          icon: <MessageSquare className="p-1 size-6 bg-[orange] rounded-sm text-white" />,
+          link: 'https://t.me/dnevnik_ton',
+          external: true,
+        },
+        {
+          title: t('settings.telegramChannel'),
+          icon: <Megaphone className="p-1 size-6 bg-[#72aee6] rounded-sm text-white" />,
+          link: 'https://t.me/dnevnik_ton',
+          external: true,
+        },
+      ],
+    },
+  ]
 
   return (
     <Page back={true}>
       <div className="w-full">
-        <h1 className="m-4 mx-6 bold text-2xl font-semibold">Settings</h1>
+        <h1 className="m-4 mx-6 bold text-2xl font-semibold">{t('settings.title')}</h1>
         <div className="flex flex-col mx-4">
+          {/* Language */}
+          <div className="mb-4">
+            <div className="ml-4 mb-2 text-sm text-foreground/50">{t('settings.language')}</div>
+            <ItemGroup className="bg-card rounded-xl overflow-hidden mt-0">
+              <Item size="sm">
+                <ItemMedia>
+                  <Languages className="p-1 size-6 bg-[#72aee6] rounded-sm text-white" />
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>{t('settings.languageDesc')}</ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <Select value={locale} onValueChange={(v) => setLocale(v as Locale)}>
+                    <SelectTrigger className="w-[120px] border-0 bg-transparent shadow-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="ru">Русский</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </ItemActions>
+              </Item>
+            </ItemGroup>
+          </div>
+
           {settingsButtonGroups.map((group) => (
             <div className="mb-4" key={group.title}>
               <div className="ml-4 mb-2 text-sm text-foreground/50">{group.title}</div>
@@ -86,14 +118,14 @@ export const SettingsPage: FC = () => {
 
           {/* Development Settings */}
           <div className="mb-4">
-            <div className="ml-4 mb-2 text-sm text-foreground/50">Development</div>
+            <div className="ml-4 mb-2 text-sm text-foreground/50">{t('settings.development')}</div>
             <ItemGroup className="bg-card rounded-xl overflow-hidden mt-0">
               <Item size="sm">
                 <ItemMedia>
                   <ImageIcon className="p-1 size-6 bg-[#72aee6] rounded-sm text-white" />
                 </ItemMedia>
                 <ItemContent>
-                  <ItemTitle>Image Proxy</ItemTitle>
+                  <ItemTitle>{t('settings.imageProxy')}</ItemTitle>
                 </ItemContent>
                 <ItemActions>
                   <button

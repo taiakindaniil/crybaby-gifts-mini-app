@@ -12,8 +12,10 @@ import { getUser, trackProfileView, type TelegramUser } from '@/api/user'
 import { Spinner } from '@/components/ui/spinner'
 import { Button } from '@/components/ui/button'
 import { Home } from 'lucide-react'
+import { useTranslation } from '@/i18n'
 
 export const ProfilePage: FC = () => {
+  const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
   const userIdNumber = userId ? parseInt(userId, 10) : null
@@ -78,7 +80,7 @@ export const ProfilePage: FC = () => {
         <div className="w-full px-4 pt-6">
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-center">
             <p className="text-destructive text-sm font-medium">
-              {error ? 'Failed to load user profile' : 'User not found'}
+              {error ? t('profile.failedToLoad') : t('profile.userNotFound')}
             </p>
           </div>
         </div>
@@ -95,7 +97,7 @@ export const ProfilePage: FC = () => {
             <Button 
               size="lg" 
               variant="ghost" 
-              aria-label="go to my profile" 
+              aria-label={t('profile.goToMyProfile')} 
               className="ml-auto mr-2"
               asChild
             >
@@ -113,7 +115,7 @@ export const ProfilePage: FC = () => {
         <ProfileTabs user={user} isOwnProfile={isOwnProfile} />
 
         <div className="py-5 px-4 text-foreground/50 text-center text-sm">
-          Big thanks to <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> and <a href="https://t.me/proTON_priTON" className="text-primary">@proTON_priTON</a> for API
+          {t('footer.thanks')} <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> {t('footer.and')} <a href="https://t.me/proTON_priTON" className="text-primary">@proTON_priTON</a> {t('footer.forApi')}
         </div>
 
         <GiftDrawer />

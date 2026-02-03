@@ -3,9 +3,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 // import { GiftGrid } from '../gifts/GiftGrid'
 // import { useQuery } from '@tanstack/react-query';
 // import { getGrids } from '@/api/gifts';
-import ProfileGroupTabs from './ProfileGroupTabs';
+import ProfileGroupTabs from './ProfileGroupTabs'
+import { useTranslation } from '@/i18n'
 
 export default function ProfileTabs({ user, isOwnProfile = false }: { user: any; isOwnProfile?: boolean }) {
+    const { t } = useTranslation()
     const [activeTab, setActiveTab] = useState('gifts')
 
     // const { data: grids = [], isLoading, error } = useQuery({queryKey: ['grids'], queryFn: getGrids});
@@ -18,12 +20,12 @@ export default function ProfileTabs({ user, isOwnProfile = false }: { user: any;
     }
 
     const tabs = [
-        { value: 'posts', label: 'Posts', icons: null },
-        { value: 'gifts', label: 'Gifts', icons: null },
-        { value: 'media', label: 'Media', icons: null },
-        { value: 'saved', label: 'Saved', icons: null },
-        { value: 'links', label: 'Links', icons: null },
-        { value: 'gifs', label: 'GIFs', icons: null },
+        { value: 'posts', label: t('profileTabs.posts'), icons: null },
+        { value: 'gifts', label: t('profileTabs.gifts'), icons: null },
+        { value: 'media', label: t('profileTabs.media'), icons: null },
+        { value: 'saved', label: t('profileTabs.saved'), icons: null },
+        { value: 'links', label: t('profileTabs.links'), icons: null },
+        { value: 'gifs', label: t('profileTabs.gifs'), icons: null },
     ]
 
     // const gifts: Gift[] = [
@@ -225,19 +227,19 @@ export default function ProfileTabs({ user, isOwnProfile = false }: { user: any;
 
         {/* Other tabs content */}
         <TabsContent value="posts" className="mt-4 px-4">
-          <p className="text-muted-foreground text-center py-8">Posts content</p>
+          <p className="text-muted-foreground text-center py-8">{t('profileTabs.postsContent')}</p>
         </TabsContent>
         <TabsContent value="media" className="mt-4 px-4">
-          <p className="text-muted-foreground text-center py-8">Media content</p>
+          <p className="text-muted-foreground text-center py-8">{t('profileTabs.mediaContent')}</p>
         </TabsContent>
         <TabsContent value="saved" className="mt-4 px-4">
-          <p className="text-muted-foreground text-center py-8">Saved content</p>
+          <p className="text-muted-foreground text-center py-8">{t('profileTabs.savedContent')}</p>
         </TabsContent>
         <TabsContent value="links" className="mt-4 px-4">
-          <p className="text-muted-foreground text-center py-8">Links content</p>
+          <p className="text-muted-foreground text-center py-8">{t('profileTabs.linksContent')}</p>
         </TabsContent>
         <TabsContent value="gifs" className="mt-4 px-4">
-          <p className="text-muted-foreground text-center py-8">GIFs content</p>
+          <p className="text-muted-foreground text-center py-8">{t('profileTabs.gifsContent')}</p>
         </TabsContent>
       </Tabs>
     )

@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { createGrid } from '@/api/gifts'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from '@/i18n'
 
 type AddAlbumDialogProps = {
   open: boolean
@@ -13,6 +14,7 @@ type AddAlbumDialogProps = {
 }
 
 export const AddAlbumDialog = ({ open, onOpenChange }: AddAlbumDialogProps) => {
+  const { t } = useTranslation()
   const [albumName, setAlbumName] = useState('')
 
   const queryClient = useQueryClient()
@@ -21,13 +23,13 @@ export const AddAlbumDialog = ({ open, onOpenChange }: AddAlbumDialogProps) => {
     mutationFn: createGrid,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grids'] })
-      toast("Album created", {
-        description: 'New album has been successfully created.',
+      toast(t('toast.albumCreated'), {
+        description: t('toast.albumCreatedDesc'),
       })
     },
     onError: () => {
-      toast("Error", {
-        description: 'Failed to create album',
+      toast(t('common.error'), {
+        description: t('toast.errorCreateAlbum'),
       })
     },
   })
@@ -46,17 +48,17 @@ export const AddAlbumDialog = ({ open, onOpenChange }: AddAlbumDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px] bg-background/50 backdrop-blur-md rounded-3xl border-border">
         <DialogHeader>
-          <DialogTitle>Create New Album</DialogTitle>
+          <DialogTitle>{t('dialogs.createNewAlbum')}</DialogTitle>
         </DialogHeader>
         <Input
-          placeholder="Album name"
+          placeholder={t('dialogs.albumName')}
           value={albumName}
           onChange={(e) => setAlbumName(e.target.value)}
           className="rounded-xl py-5 border-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-card/30"
         />
         <DialogFooter>
           <Button onClick={onSubmit} disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creating...' : 'Create'}
+            {mutation.isPending ? t('dialogs.creating') : t('common.create')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -2,6 +2,7 @@ import type { FC } from 'react'
 import { ChevronDown } from 'lucide-react'
 import type { Gift } from '@/types/gift'
 import { Spinner } from '../ui/spinner'
+import { useTranslation } from '@/i18n'
 
 type GiftFieldButtonProps = {
   label: string
@@ -56,8 +57,10 @@ export const GiftFieldButton: FC<GiftFieldButtonProps> = ({
   isDisabled,
   onClick,
 }) => {
+  const { t } = useTranslation()
   const disabled = isDisabled || isFieldDisabled(fieldKey, gift, isLoading)
-  const value = getFieldValue(gift, fieldKey)
+  const rawValue = getFieldValue(gift, fieldKey)
+  const value = rawValue === 'All' ? t('common.all') : rawValue
 
   return (
     <button

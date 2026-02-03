@@ -1,7 +1,8 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { popup, retrieveLaunchParams } from "@telegram-apps/sdk-react";
-import { toast } from "sonner";
+import { toast } from "sonner"
+import { useTranslation } from '@/i18n'
 import { GiftCard } from "./GiftCard";
 import type { Gift } from '@/types/gift';
 import { Button } from '../ui/button';
@@ -90,11 +91,10 @@ const DraggableCell: FC<DraggableCellProps> = ({ id, cell, onClick, isOver, isOw
 };
 
 export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false, isOwnProfile = false }) => {
-  // isMainAlbum может использоваться для дополнительной логики в будущем
-  // например, для визуального выделения main album или специальных функций
-  void isMainAlbum; // Suppress unused variable warning
-  const setSelectedCell = useGiftStore().setSelectedCell;
-  const queryClient = useQueryClient();
+  const { t } = useTranslation()
+  void isMainAlbum
+  const setSelectedCell = useGiftStore().setSelectedCell
+  const queryClient = useQueryClient()
   
   // Получаем user.id для правильного query key
   const lp = retrieveLaunchParams();
@@ -122,7 +122,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
       queryClient.invalidateQueries({ queryKey: ['grids', userId] })
     },
     onError: (error) => {
-      toast("Can't add row", {
+      toast(t('toast.cantAddRow'), {
         description: error.message
       })
     }
@@ -134,7 +134,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
       queryClient.invalidateQueries({ queryKey: ['grids', userId] })
     },
     onError: (error) => {
-      toast("Can't delete row", {
+      toast(t('toast.cantDeleteRow'), {
         description: error.message
       })
     }
@@ -144,13 +144,13 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
     mutationFn: () => deleteGrid(gridId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['grids', userId] })
-      toast("Album deleted", {
-        description: 'New album has been successfully deleted.',
+      toast(t('toast.albumDeleted'), {
+        description: t('toast.albumDeletedDesc'),
       })
     },
     onError: () => {
-      toast("Error", {
-        description: 'Failed to delete album',
+      toast(t('common.error'), {
+        description: t('toast.errorDeleteAlbum'),
       })
     },
   })
@@ -228,8 +228,8 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
       if (context?.previousGrids) {
         queryClient.setQueryData(['grids', userId], context.previousGrids)
       }
-      toast("Error", {
-        description: error.message || 'Failed to move gift',
+      toast(t('common.error'), {
+        description: error.message || t('toast.errorMoveGift'),
       })
     },
     onSuccess: async () => {
@@ -284,8 +284,8 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
     const currentGrid = grids.find(g => g.id === gridId)
     
     if (!currentGrid) {
-      toast("Error", {
-        description: 'Grid not found',
+      toast(t('common.error'), {
+        description: t('toast.errorGridNotFound'),
       })
       return
     }
@@ -295,8 +295,8 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
 
     // Проверяем, не закреплены ли подарки
     if (sourceCell.pinned || targetCell.pinned) {
-      toast("Error", {
-        description: 'Cannot move pinned gifts',
+      toast(t('common.error'), {
+        description: t('toast.errorMovePinned'),
       })
       return
     }
@@ -314,8 +314,8 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
 
   const openPopup = () => {
     popup.show({
-      title: 'Delete album of nfts?',
-      message: 'If you delete this album, you won\'t be able restore it.',
+      title: t('giftDrawer.deleteAlbumTitle'),
+      message: t('giftDrawer.deleteAlbumMessage'),
       buttons: [
         { id: "delete", type: "ok" },
         { id: "cancel", type: "cancel" }
@@ -389,7 +389,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
             onClick={() => addRowMutation.mutate()}
             disabled={addRowMutation.isPending}
           >
-            {addRowMutation.isPending ? 'Adding...' : 'Add Row'}
+            {addRowMutation.isPending ? t('giftDrawer.adding') : t('giftDrawer.addRow')}
           </Button>
 
           <Button
@@ -398,7 +398,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
             onClick={() => deleteLastRowMutation.mutate()}
             disabled={deleteLastRowMutation.isPending || rows.length <= 1}
           >
-            {deleteLastRowMutation.isPending ? 'Removing...' : 'Remove Last Row'}
+            {deleteLastRowMutation.isPending ? t('giftDrawer.removing') : t('giftDrawer.removeLastRow')}
           </Button>
 
           <Button
@@ -406,7 +406,7 @@ export const GiftGrid: FC<GiftGridProps> = ({ gridId, rows, isMainAlbum = false,
             className="mt-2 h-11 w-full rounded-full cursor-pointer text-white font-semibold"
             onClick={openPopup}
           >
-            Delete Album
+            {t('giftDrawer.deleteAlbum')}
           </Button>
         </>
       )}

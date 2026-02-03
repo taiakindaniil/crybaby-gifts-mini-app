@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { updateBio } from '@/api/user'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import useApi from '@/api/hooks/useApi'
+import { useTranslation } from '@/i18n'
 
 type EditBioDialogProps = {
   open: boolean
@@ -15,6 +16,7 @@ type EditBioDialogProps = {
 }
 
 export const EditBioDialog = ({ open, onOpenChange, currentBio = '', onBioUpdated }: EditBioDialogProps) => {
+  const { t } = useTranslation()
   const api = useApi()
 
   const [bio, setBio] = useState('')
@@ -31,13 +33,13 @@ export const EditBioDialog = ({ open, onOpenChange, currentBio = '', onBioUpdate
     mutationFn: updateBio,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user'] })
-      toast("Bio updated", {
-        description: 'Your bio has been successfully updated.',
+      toast(t('toast.bioUpdated'), {
+        description: t('toast.bioUpdatedDesc'),
       })
     },
     onError: () => {
-      toast("Error", {
-        description: 'Failed to update bio',
+      toast(t('common.error'), {
+        description: t('toast.errorUpdateBio'),
       })
     },
   })
@@ -64,11 +66,11 @@ export const EditBioDialog = ({ open, onOpenChange, currentBio = '', onBioUpdate
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px] bg-background/50 backdrop-blur-md rounded-3xl border-border">
         <DialogHeader>
-          <DialogTitle>Edit Bio</DialogTitle>
+          <DialogTitle>{t('profile.editBio')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-2">
           <Textarea
-            placeholder="Enter your bio"
+            placeholder={t('profile.enterBio')}
             value={bio}
             onChange={handleBioChange}
             maxLength={MAX_BIO_LENGTH}
@@ -83,7 +85,7 @@ export const EditBioDialog = ({ open, onOpenChange, currentBio = '', onBioUpdate
         </div>
         <DialogFooter>
           <Button onClick={onSubmit} disabled={mutation.isPending}>
-            {mutation.isPending ? 'Saving...' : 'Save'}
+            {mutation.isPending ? t('dialogs.saving') : t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

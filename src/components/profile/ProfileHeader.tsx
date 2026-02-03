@@ -9,6 +9,7 @@ import { buildGiftModelUrl } from '@/lib/giftUrls'
 import { ProxiedImage } from '@/components/ui/ProxiedImage'
 import { ProfileViewCounter } from './ProfileViewCounter'
 import type { Gift } from '@/types/gift'
+import { useTranslation } from '@/i18n'
 
 interface TelegramUser {
   id: number;
@@ -28,7 +29,8 @@ interface ProfileHeaderProps {
 
 export const ProfileHeader: FC<ProfileHeaderProps> = ({ user, isOwnProfile = false }) => {
     // Получаем данные пользователя
-    const userName = user ? `${user.first_name}${user.last_name ? ` ${user.last_name}` : ''}` : 'User'
+    const { t } = useTranslation()
+    const userName = user ? `${user.first_name}${user.last_name ? ` ${user.last_name}` : ''}` : t('profile.user')
     const userInitials = user 
         ? `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase() || 'U'
         : 'U'
@@ -156,7 +158,7 @@ export const ProfileHeader: FC<ProfileHeaderProps> = ({ user, isOwnProfile = fal
             </div>
             
             <p className="text-sm text-muted-foreground mb-4">
-                {isOwnProfile ? 'online' : 'last seen recently'}
+                {isOwnProfile ? t('profile.online') : t('profile.lastSeen')}
             </p>
             
             <ProfileViewCounter 

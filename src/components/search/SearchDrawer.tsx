@@ -5,7 +5,8 @@ import type { GiftBackground } from "@/types/gift";
 import { Spinner } from "../ui/spinner";
 import { InputGroup, InputGroupAddon } from "../ui/input-group";
 import { Search } from "lucide-react";
-import { ProxiedImage } from "@/components/ui/ProxiedImage";
+import { ProxiedImage } from "@/components/ui/ProxiedImage"
+import { useTranslation } from '@/i18n'
 
 type Item = {
   id: string
@@ -26,6 +27,7 @@ type Props = {
 }
 
 export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, handleSelect, query: externalQuery, onQueryChange }) => {
+  const { t } = useTranslation()
   const [internalQuery, setInternalQuery] = useState("");
   const query = externalQuery !== undefined ? externalQuery : internalQuery
   
@@ -66,7 +68,7 @@ export const SearchDrawer: FC<Props> = ({ open, onOpenChange, title, items, hand
             <Search />
           </InputGroupAddon>
           <Input
-            placeholder="Search..."
+            placeholder={t('search.placeholder')}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

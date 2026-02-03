@@ -7,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button'
 import type { Gift, GiftBackground } from '@/types/gift'
 import { useGiftStore, giftFields } from '@/stores/giftStore'
+import { useTranslation, getGiftFieldLabelKey } from '@/i18n'
 import { SearchDrawer } from '../search/SearchDrawer'
 import { useMutation, useQueryClient, useQuery, useQueries } from '@tanstack/react-query'
 import { updateGiftCell, togglePinGift, getGrids, type Grid } from '@/api/gifts'
@@ -50,6 +51,7 @@ function parseSearchQuery(query: string): { collectionQuery: string; giftId: num
 }
 
 export const GiftDrawer: FC = () => {
+  const { t } = useTranslation()
   const selectedCell = useGiftStore((state) => state.selectedCell)
   const clearSelectedCell = useGiftStore((state) => state.clearSelectedCell)
   const editingFieldKey = useGiftStore((state) => state.editingFieldKey)
@@ -324,8 +326,8 @@ export const GiftDrawer: FC = () => {
       clearSelectedCell()
     },
     onError: () => {
-      toast('Error', {
-        description: 'Failed to update gift',
+      toast(t('common.error'), {
+        description: t('toast.errorUpdateGift'),
       })
     },
   })
@@ -382,8 +384,8 @@ export const GiftDrawer: FC = () => {
       if (context?.previousGrids != null && user?.id != null) {
         queryClient.setQueryData(['grids', user.id], context.previousGrids)
       }
-      toast('Error', {
-        description: 'Failed to toggle pin',
+      toast(t('common.error'), {
+        description: t('toast.errorTogglePin'),
       })
     },
     onSuccess: () => {
@@ -425,13 +427,13 @@ export const GiftDrawer: FC = () => {
                         value="constructor"
                         className="px-4 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-card dark:!data-[state=active]:bg-card rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto cursor-pointer"
                       >
-                        <span>Constructor</span>
+                        <span>{t('giftDrawer.constructor')}</span>
                       </TabsTrigger>
                       <TabsTrigger
                         value="freeform"
                         className="px-4 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-card dark:!data-[state=active]:bg-card rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto cursor-pointer"
                       >
-                        <span>Freeform</span>
+                        <span>{t('giftDrawer.freeform')}</span>
                       </TabsTrigger>
                       {/* <TabsTrigger
                         value="collection"
@@ -440,7 +442,7 @@ export const GiftDrawer: FC = () => {
                           setIsCollectionSearchOpen(true)
                         }}
                       >
-                        <span>Collection</span>
+                        <span>{t('giftDrawer.collection')}</span>
                       </TabsTrigger> */}
                     </TabsList>
                   </Tabs>
@@ -454,7 +456,7 @@ export const GiftDrawer: FC = () => {
                   return (
                     <GiftFieldButton
                       key={field.key}
-                      label={field.label}
+                      label={t(getGiftFieldLabelKey(field.key))}
                       fieldKey={field.key}
                       gift={selectedCell?.gift}
                       isLoading={fieldLoading}
@@ -472,7 +474,7 @@ export const GiftDrawer: FC = () => {
                   <div className="px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Pin className="w-4 h-4" />
-                      <span className="text-sm font-medium">Pin to profile</span>
+                      <span className="text-sm font-medium">{t('giftDrawer.pinToProfile')}</span>
                     </div>
                     <button
                       onClick={handleTogglePin}
@@ -503,7 +505,7 @@ export const GiftDrawer: FC = () => {
                     onClick={handleApply}
                     disabled={updateGiftMutation.isPending}
                   >
-                    {updateGiftMutation.isPending ? <Spinner /> : 'Apply'}
+                    {updateGiftMutation.isPending ? <Spinner /> : t('common.apply')}
                   </Button>
                 </DrawerFooter>
               )}
@@ -518,7 +520,7 @@ export const GiftDrawer: FC = () => {
               setEditingFieldKey(null)
             }
           }}
-          title={giftFields.find((f) => f.key === editingFieldKey)?.label ?? ''}
+          title={editingFieldKey ? t(getGiftFieldLabelKey(editingFieldKey)) : ''}
           items={drawerItems
             .map((item) => ({
               ...item,
@@ -537,7 +539,7 @@ export const GiftDrawer: FC = () => {
               setCollectionSearchQuery('')
             }
           }}
-          title="Search Collection"
+          title={t('giftDrawer.searchCollection')}
           items={
             collectionQueries.some((q) => q.isLoading)
               ? [] // Показываем спиннер при загрузке

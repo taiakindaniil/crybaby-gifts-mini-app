@@ -25,35 +25,36 @@ import useApi from '@/api/hooks/useApi'
 import { getSubscriptionPlans, type SubscriptionPlan } from '@/api/subscription'
 import { proxyImageUrl } from '@/lib/giftUrls'
 import { ProxiedImage } from '@/components/ui/ProxiedImage'
-
-const subscriptionItems = [
-  {
-    title: 'Premium badge',
-    description: 'Show premium badge in your profile',
-    link: '/subscription',
-    icon: <BadgeCheckIcon className="size-5 text-blue-500" />,
-  },
-  {
-    title: 'Multiple Collections',
-    description: 'Access to multiple collections',
-    link: '/subscription',
-    icon: <GalleryThumbnails className="size-5 text-blue-500" />,
-  },
-  {
-    title: 'Hidden collections',
-    description: 'Hide collections from public view',
-    link: '/subscription',
-    icon: <EyeOff className="size-5 text-blue-500" />,
-  },
-  {
-    title: 'More soon...',
-    description: 'Get access to exclusive features',
-    link: '/subscription',
-    icon: <Sparkles className="size-5 text-blue-500" />,
-  }
-]
+import { useTranslation } from '@/i18n'
 
 export const SubscriptionPage: FC = () => {
+  const { t } = useTranslation()
+  const subscriptionItems = [
+    {
+      title: t('subscription.premiumBadge'),
+      description: t('subscription.premiumBadgeDesc'),
+      link: '/subscription',
+      icon: <BadgeCheckIcon className="size-5 text-blue-500" />,
+    },
+    {
+      title: t('subscription.multipleCollections'),
+      description: t('subscription.multipleCollectionsDesc'),
+      link: '/subscription',
+      icon: <GalleryThumbnails className="size-5 text-blue-500" />,
+    },
+    {
+      title: t('subscription.hiddenCollections'),
+      description: t('subscription.hiddenCollectionsDesc'),
+      link: '/subscription',
+      icon: <EyeOff className="size-5 text-blue-500" />,
+    },
+    {
+      title: t('subscription.moreSoon'),
+      description: t('subscription.moreSoonDesc'),
+      link: '/subscription',
+      icon: <Sparkles className="size-5 text-blue-500" />,
+    },
+  ]
 //   const lp = useMemo(() => retrieveLaunchParams(), []);
 //   const user = lp.tgWebAppData?.user
 
@@ -82,8 +83,8 @@ export const SubscriptionPage: FC = () => {
       queryClient.invalidateQueries({ queryKey: ['invoice'] })
     },
     onError: () => {
-      toast("Error", {
-        description: 'Failed to create invoice',
+      toast(t('common.error'), {
+        description: t('toast.errorCreateInvoice'),
       })
     },
   })
@@ -92,7 +93,7 @@ export const SubscriptionPage: FC = () => {
     <Page back={true}>
       <div className="w-full">
         <ProxiedImage src={proxyImageUrl("https://cdn.changes.tg/gifts/models/Mighty%20Arm/png/Original.png")} alt="Premium" className="mt-8 w-24 h-24 mx-auto" />
-        <h1 className="m-4 bold text-2xl font-semibold text-center">Exclusive features</h1>
+        <h1 className="m-4 bold text-2xl font-semibold text-center">{t('subscription.exclusiveFeatures')}</h1>
         <ItemGroup className="bg-card rounded-xl overflow-hidden mx-4">
           {subscriptionItems.map((item) => (
             <Item size="default" asChild key={item.title}>
@@ -116,14 +117,14 @@ export const SubscriptionPage: FC = () => {
           {hasActiveSubscription ? (
             <div className="rounded-full h-12 w-full bg-green-500/20 border border-green-500/50 flex items-center justify-center">
               <span className="text-sm font-medium text-green-500">
-                Subscription is active until {new Date(subscription?.end_date || '').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                {t('subscription.subscriptionActiveUntil')} {new Date(subscription?.end_date || '').toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </span>
             </div>
           ) : (
             <Button className="rounded-full h-12 w-full cursor-pointer" onClick={() => createInvoiceMutation.mutate()}>
               {createInvoiceMutation.isPending || isSubscriptionPlansLoading ? <Spinner className="text-white" /> : <>
                 <span className="text-sm font-medium text-white">
-                  Get monthly subscription for <img src={starSvg} alt="stars" className="mt-[-2px] size-5 inline-block" />{subscriptionPlan?.price}
+                  {t('subscription.getMonthlySubscription')} <img src={starSvg} alt="stars" className="mt-[-2px] size-5 inline-block" />{subscriptionPlan?.price}
                 </span>
               </>}
             </Button>

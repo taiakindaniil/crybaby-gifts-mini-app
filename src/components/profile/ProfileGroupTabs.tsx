@@ -7,8 +7,9 @@ import { useState } from 'react';
 import { AddAlbumDialog } from '../gifts/AddAlbumDialog';
 import { useHasActiveSubscription } from '@/hooks/useSubscription';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '../ui/button';
-import { Sparkles } from 'lucide-react';
+import { Button } from '../ui/button'
+import { Sparkles } from 'lucide-react'
+import { useTranslation } from '@/i18n'
 
 interface TelegramUser {
   id: number;
@@ -19,6 +20,7 @@ interface TelegramUser {
 }
 
 export default function ProfileGroupTabs({ user, isOwnProfile = false }: { user: TelegramUser; isOwnProfile?: boolean }) {
+    const { t } = useTranslation()
     const [activeTab, setActiveTab] = useState<string | undefined>(undefined)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const navigate = useNavigate()
@@ -71,7 +73,7 @@ export default function ProfileGroupTabs({ user, isOwnProfile = false }: { user:
                   onClick={() => {return}}
                   className="px-3 !grow-0 whitespace-nowrap bg-transparent !data-[state=active]:bg-muted dark:!data-[state=active]:bg-muted rounded-full border-0 border-transparent data-[state=active]:border-primary !shadow-none !data-[state=active]:shadow-none whitespace-nowrap shrink-0 text-muted-foreground data-[state=active]:text-foreground h-auto disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  + Add Album
+                  + {t('dialogs.addAlbum')}
                 </TabsTrigger>
               )}
             </TabsList>
@@ -91,14 +93,14 @@ export default function ProfileGroupTabs({ user, isOwnProfile = false }: { user:
                       <Sparkles className="size-16 text-blue-500 mx-auto" />
                     </div>
                     <h3 className="text-xl font-semibold text-foreground mb-2 text-center">
-                      Subscribe to unlock this album
+                      {t('subscription.subscribeToUnlock')}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-6 text-center max-w-sm">
-                      Get access to all albums and exclusive features with a premium subscription
+                      {t('subscription.subscribeToUnlockDesc')}
                     </p>
                     <Button asChild className="rounded-full">
                       <Link to="/subscription">
-                        Get Subscription
+                        {t('subscription.getSubscription')}
                       </Link>
                     </Button>
                   </div>

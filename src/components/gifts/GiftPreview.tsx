@@ -4,6 +4,7 @@ import type { Gift } from '@/types/gift'
 import { GiftAnimation } from './GiftAnimation'
 import { PatternBackground } from './PatternBackground'
 import { buildGiftPatternUrl, buildTelegramGiftUrl } from '@/lib/giftUrls'
+import { useTranslation } from '@/i18n'
 
 type GiftPreviewProps = {
   gift: Gift | null | undefined
@@ -11,6 +12,7 @@ type GiftPreviewProps = {
 }
 
 export const GiftPreview: FC<GiftPreviewProps> = ({ gift, onDelete }) => {
+  const { t } = useTranslation()
   if (!gift) return (
     <div className="relative min-h-[200px] text-white overflow-hidden bg-muted"></div>
   )
@@ -38,7 +40,7 @@ export const GiftPreview: FC<GiftPreviewProps> = ({ gift, onDelete }) => {
             href={telegramUrl}
             className="mr-auto flex h-9 px-4 items-center justify-center rounded-full bg-white/15 backdrop-blur text-white z-20 relative active:scale-95 transition-transform cursor-pointer"
           >
-            Open in Telegram
+            {t('giftPreview.openInTelegram')}
           </a>
         )}
         {onDelete && (
@@ -61,7 +63,7 @@ export const GiftPreview: FC<GiftPreviewProps> = ({ gift, onDelete }) => {
 
         {telegramUrl && (
           <div className="absolute b-0 w-full text-center text-white/70 text-xs bottom-0 py-3">
-            <a href={telegramUrl}>Collectible #{gift.id}</a>
+            <a href={telegramUrl}>{t('giftPreview.collectible')} #{gift.id}</a>
           </div>
         )}
       </div>

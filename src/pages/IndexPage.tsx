@@ -13,10 +13,12 @@ import { SubscriptionItem } from '@/components/subscription/SubscriptionItem'
 import { generateProfileShareLink } from '@/lib/shareProfile'
 import { trackProfileView, getUser, type TelegramUser } from '@/api/user'
 import { toast } from 'sonner'
+import { useTranslation } from '@/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Spinner } from '@/components/ui/spinner'
 
 export const IndexPage: FC = () => {
+  const { t } = useTranslation()
   const lp = useMemo(() => retrieveLaunchParams(), []);
   const telegramUser = lp.tgWebAppData?.user
   const hasTrackedView = useRef(false)
@@ -54,19 +56,19 @@ export const IndexPage: FC = () => {
     if (openTelegramLink && typeof openTelegramLink === 'function') {
         try {
             openTelegramLink(shareLink)
-            toast("Opening share dialog...")
+            toast(t('toast.openingShare'))
         } catch {
             // Fallback: копируем в буфер обмена
             navigator.clipboard.writeText(shareLink)
-            toast("Profile link copied to clipboard", {
-                description: 'Share this link with others to view your profile'
+            toast(t('toast.profileLinkCopied'), {
+                description: t('toast.profileLinkCopiedDesc')
             })
         }
     } else {
         // Fallback: копируем в буфер обмена
         navigator.clipboard.writeText(shareLink)
-        toast("Profile link copied to clipboard", {
-            description: 'Share this link with others to view your profile'
+        toast(t('toast.profileLinkCopied'), {
+            description: t('toast.profileLinkCopiedDesc')
         })
     }
   }
@@ -93,13 +95,13 @@ export const IndexPage: FC = () => {
           <Button 
             size="lg" 
             variant="ghost" 
-            aria-label="share profile" 
+            aria-label={t('profile.shareProfile')} 
             className="ml-2"
             onClick={handleShareProfile}
           >
             <Share2 className="size-5" />
           </Button>
-          <Button size="lg" variant="ghost" aria-label="settings" className="ml-auto mr-2">
+          <Button size="lg" variant="ghost" aria-label={t('profile.settingsAria')} className="ml-auto mr-2">
             <Link to="/settings">
               <Settings className="size-5" />
             </Link>
@@ -115,7 +117,7 @@ export const IndexPage: FC = () => {
         <ProfileTabs user={displayUser} isOwnProfile={true} />
 
         <div className="py-5 px-4 text-foreground/50 text-center text-sm">
-          Big thanks to <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> and <a href="https://t.me/proTON_priTON" className="text-primary">@proTON_priTON</a> for API
+          {t('footer.thanks')} <a href="https://t.me/giftchanges" className="text-primary">@giftchanges</a> {t('footer.and')} <a href="https://t.me/proTON_priTON" className="text-primary">@proTON_priTON</a> {t('footer.forApi')}
         </div>
 
         <GiftDrawer />
