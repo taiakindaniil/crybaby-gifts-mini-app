@@ -9,6 +9,10 @@ const IMAGE_PROXY_SETTING_KEY = 'image-proxy-enabled'
 /** Нормализует Unicode-апостроф (U+2019) в ASCII (U+0027) до кодирования URL */
 const normalizeApostrophe = (s: string): string => s.replace(/\u2019/g, "'")
 
+/** Сегмент пути для CDN: апостроф + слеш как обратный слеш (AC/DC → AC%5CDC) */
+const encodePathSegment = (s: string): string =>
+  encodeURIComponent(normalizeApostrophe(s).replace(/\//g, '\\')).replace(/'/g, '%27')
+
 /**
  * Проверяет, включено ли проксирование изображений
  */
@@ -38,23 +42,17 @@ export const proxyLottieUrl = (url: string): string => {
 }
 
 export const buildGiftModelUrl = (giftName: string, model: string): string => {
-  const name = normalizeApostrophe(giftName)
-  const normalizedModel = normalizeApostrophe(model)
-  const url = `https://cdn.changes.tg/gifts/models/${encodeURIComponent(name)}/png/${encodeURIComponent(normalizedModel)}.png`.replace(/'/g, '%27')
+  const url = `https://cdn.changes.tg/gifts/models/${encodePathSegment(giftName)}/png/${encodePathSegment(model)}.png`
   return proxyImageUrl(url)
 }
 
 export const buildGiftPatternUrl = (giftName: string, pattern: string): string => {
-  const name = normalizeApostrophe(giftName)
-  const normalizedPattern = normalizeApostrophe(pattern)
-  const url = `https://cdn.changes.tg/gifts/patterns/${encodeURIComponent(name)}/png/${encodeURIComponent(normalizedPattern)}.png`.replace(/'/g, '%27')
+  const url = `https://cdn.changes.tg/gifts/patterns/${encodePathSegment(giftName)}/png/${encodePathSegment(pattern)}.png`
   return proxyImageUrl(url)
 }
 
 export const buildGiftLottieUrl = (giftName: string, model: string): string => {
-  const name = normalizeApostrophe(giftName)
-  const normalizedModel = normalizeApostrophe(model)
-  const url = `https://cdn.changes.tg/gifts/models/${encodeURIComponent(name)}/lottie/${encodeURIComponent(normalizedModel)}.json`.replace(/'/g, '%27')
+  const url = `https://cdn.changes.tg/gifts/models/${encodePathSegment(giftName)}/lottie/${encodePathSegment(model)}.json`
   return proxyLottieUrl(url)
 }
 
