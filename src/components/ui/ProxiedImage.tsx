@@ -69,18 +69,18 @@ export const ProxiedImage: React.FC<ProxiedImageProps> = ({ src, ...imgProps }) 
   // Если проксирование отключено или это не ngrok URL, сразу возвращаем обычный img
   // Браузер автоматически кэширует такие изображения
   if (!isProxyEnabled || !isNgrok) {
-    return <img {...imgProps} src={src} />
+    return <img loading="lazy" {...imgProps} src={src} />
   }
 
   // Для ngrok URL показываем состояние загрузки
   if (error) {
-    return <img {...imgProps} src="" alt={imgProps.alt || ''} style={{ opacity: 0 }} />
+    return <img loading="lazy" {...imgProps} src="" alt={imgProps.alt || ''} style={{ opacity: 0 }} />
   }
 
   if (!imageUrl) {
     return <div className={imgProps.className} style={{ ...imgProps.style, backgroundColor: 'transparent' }} />
   }
 
-  return <img {...imgProps} src={imageUrl} />
+  return <img loading="lazy" {...imgProps} src={imageUrl} />
 }
 
