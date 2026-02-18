@@ -65,3 +65,17 @@ export const getConstructorGift = async (
   )
   return data
 }
+
+/** All unique backdrops across the catalog (for freeform mode). */
+export const getConstructorAllBackdrops = async (): Promise<string[]> => {
+  const { data } = await apiClient.get<unknown>('/constructor/backdrops')
+  return toArray(data, 'backdrops')
+}
+
+/** All symbols for a collection (for freeform mode). */
+export const getConstructorCollectionAllSymbols = async (collection: string): Promise<string[]> => {
+  const { data } = await apiClient.get<unknown>(
+    `/constructor/collections/${encodeURIComponent(collection)}/all-symbols`
+  )
+  return toArray(data, 'symbols')
+}

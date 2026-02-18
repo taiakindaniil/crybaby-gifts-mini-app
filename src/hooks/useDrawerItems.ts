@@ -37,6 +37,10 @@ export const useDrawerItems = ({
     if (mode === 'constructor' && ['gifts', 'model', 'background', 'pattern'].includes(editingFieldKey)) {
       return []
     }
+    // В freeform режиме модель, фон и символы берутся из constructor API в GiftDrawer (без proxy/api/gifts)
+    if (mode === 'freeform' && (editingFieldKey === 'model' || editingFieldKey === 'background' || editingFieldKey === 'pattern')) {
+      return []
+    }
 
     // GIFTS
     if (editingFieldKey === 'gifts') {

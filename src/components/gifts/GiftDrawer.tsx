@@ -10,17 +10,18 @@ import { useGiftStore, giftFields } from '@/stores/giftStore'
 import { useTranslation, getGiftFieldLabelKey } from '@/i18n'
 import { SearchDrawer } from '../search/SearchDrawer'
 import { useMutation, useQueryClient, useQuery, useQueries } from '@tanstack/react-query'
+import { getConstructorCollections, getConstructorModels, getConstructorCollectionAllSymbols } from '@/api/constructor'
 import { updateGiftCell, togglePinGift, getGrids, type Grid } from '@/api/gifts'
 import { retrieveLaunchParams } from '@telegram-apps/sdk-react'
 import { Pin } from 'lucide-react'
 import { toast } from 'sonner'
 import { Spinner } from '../ui/spinner'
-import { useBackgrounds, useGifts } from '@/hooks/useGiftQueries'
-import { useGiftCollection, type GiftCollectionResponse } from '@/hooks/useGiftCollection'
-import { buildGiftTree } from '@/lib/buildGiftTree'
+import { useBackgrounds } from '@/hooks/useGiftQueries'
+import type { GiftCollectionResponse } from '@/hooks/useGiftCollection'
 import { buildGiftModelUrl, buildGiftPatternUrl } from '@/lib/giftUrls'
 import apiClient from '@/api/apiClient'
 import { useConstructorState } from '@/hooks/useConstructorState'
+import { useFreeformBackdropsAndSymbols } from '@/hooks/useFreeformBackdropsAndSymbols'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useDrawerItems, type DrawerItem } from '@/hooks/useDrawerItems'
 import { GiftPreview } from './GiftPreview'
@@ -103,22 +104,58 @@ export const GiftDrawer: FC = () => {
     prevModeRef.current = constructorMode
   }, [constructorMode, selectedCell, isOwnProfile])
 
-  const giftName = selectedCell?.gift?.name
-  const { data: collectionData, isLoading: giftCollectionLoading } = useGiftCollection(giftName)
-  const { data: gifts, isLoading: giftsLoading } = useGifts()
+  const isConstructorModeActive = constructorMode === 'constructor'
+  const legacyEnabled = constructorMode === 'freeform'
+
+  const giftName = legacyEnabled ? selectedCell?.gift?.name : undefined
   const { data: backgrounds } = useBackgrounds()
 
-  const giftTree = useMemo(() => {
-    if (!collectionData?.gifts) return {}
-    return buildGiftTree(collectionData.gifts)
-  }, [collectionData])
+  // Коллекции для обоих режимов: GET /constructor/collections (proxy/changes-tg/gifts больше не используется)
+  const collectionsQuery = useQuery({
+    queryKey: ['constructor', 'collections'],
+    queryFn: getConstructorCollections,
+    enabled: !!selectedCell,
+    staleTime: 1000 * 60 * 60 * 24,
+  })
+  const gifts = useMemo(() => {
+    const d = collectionsQuery.data
+    return Array.isArray(d) ? d : []
+  }, [collectionsQuery.data])
 
-  const isConstructorModeActive = constructorMode === 'constructor'
+  // Freeform models: GET /constructor/collections/{collection}/models
+  const freeformModelsQuery = useQuery({
+    queryKey: ['constructor', 'models', giftName],
+    queryFn: () => getConstructorModels(giftName!),
+    enabled: legacyEnabled && !!giftName,
+    staleTime: 1000 * 60 * 60 * 24,
+  })
+  const freeformModels = useMemo(() => {
+    const d = freeformModelsQuery.data
+    return Array.isArray(d) ? d : []
+  }, [freeformModelsQuery.data])
+
+  const freeformSymbolsQuery = useQuery({
+    queryKey: ['constructor', 'collection-all-symbols', giftName],
+    queryFn: () => getConstructorCollectionAllSymbols(giftName!),
+    enabled: legacyEnabled && !!giftName,
+    staleTime: 1000 * 60 * 60 * 24,
+  })
+  const freeformSymbols = useMemo(() => {
+    const d = freeformSymbolsQuery.data
+    return Array.isArray(d) ? d : []
+  }, [freeformSymbolsQuery.data])
+
+  const giftTree = useMemo(() => ({}), [])
+
   const constructorState = useConstructorState({
     selectedGift: selectedCell?.gift,
     isConstructorMode: isConstructorModeActive,
     isDrawerOpen: !!selectedCell,
   })
+
+  const freeformBackdropsAndSymbols = useFreeformBackdropsAndSymbols(
+    legacyEnabled && !!selectedCell
+  )
 
   useEffect(() => {
     if (!isConstructorModeActive || !constructorState.error) return
@@ -178,6 +215,44 @@ export const GiftDrawer: FC = () => {
     backgrounds,
   ])
 
+  // Freeform-mode drawer items: model (.../models), background (.../backdrops), pattern (.../all-symbols по коллекции)
+  const freeformDrawerItems = useMemo(() => {
+    if (isConstructorModeActive || !editingFieldKey) return []
+    const { backdrops } = freeformBackdropsAndSymbols
+    const collectionName = selectedCell?.gift?.name
+
+    if (editingFieldKey === 'model' && collectionName) {
+      return freeformModels.map((modelName, id) => ({
+        id,
+        title: modelName,
+        image: buildGiftModelUrl(collectionName, modelName),
+      }))
+    }
+    if (editingFieldKey === 'background') {
+      return backdrops.map((backdropName, id) => ({
+        id,
+        title: backdropName,
+        background: backgrounds?.find((bg: GiftBackground) => bg.name === backdropName),
+      }))
+    }
+    if (editingFieldKey === 'pattern' && collectionName) {
+      return freeformSymbols.map((symbolName) => ({
+        id: 0,
+        title: symbolName,
+        pattern: buildGiftPatternUrl(collectionName, symbolName),
+      }))
+    }
+    return []
+  }, [
+    isConstructorModeActive,
+    editingFieldKey,
+    freeformBackdropsAndSymbols,
+    freeformModels,
+    freeformSymbols,
+    selectedCell?.gift?.name,
+    backgrounds,
+  ])
+
   // Парсинг поискового запроса для коллекций
   const parsedQuery = useMemo(() => {
     if (collectionSearchQuery.length < 2) return null
@@ -199,7 +274,7 @@ export const GiftDrawer: FC = () => {
       .slice(0, 10) // Ограничиваем до 10 коллекций
   }, [parsedQuery, gifts])
 
-  // Загрузка данных коллекций через API
+  // Поиск по коллекции: proxy/api/gifts больше не используется; при необходимости подключать constructor API
   const collectionQueries = useQueries({
     queries: filteredCollections.map((collectionName: string) => {
       const apiCollectionName = collectionName.replace(/\s+/g, '').toLowerCase()
@@ -209,7 +284,7 @@ export const GiftDrawer: FC = () => {
           const res = await apiClient.get(`/proxy/api/gifts/${encodeURIComponent(apiCollectionName)}`)
           return res.data as GiftCollectionResponse
         },
-        enabled: isCollectionSearchOpen && collectionSearchQuery.length >= 2 && !!collectionName,
+        enabled: false,
         staleTime: 1000 * 60 * 60 * 24,
       }
     }),
@@ -327,7 +402,11 @@ export const GiftDrawer: FC = () => {
   })
 
   const searchDrawerItems =
-    isConstructorModeActive && editingFieldKey ? constructorDrawerItems : drawerItems
+    isConstructorModeActive && editingFieldKey
+      ? constructorDrawerItems
+      : !isConstructorModeActive && editingFieldKey && (editingFieldKey === 'model' || editingFieldKey === 'background' || editingFieldKey === 'pattern')
+        ? freeformDrawerItems
+        : drawerItems
 
   const handleSelect = async (item: DrawerItem) => {
     if (!isOwnProfile) return
@@ -559,8 +638,12 @@ export const GiftDrawer: FC = () => {
                             ? constructorState.isLoadingBackdrops
                             : constructorState.isLoadingSymbols)
                     : i === 0
-                      ? giftsLoading
-                      : giftCollectionLoading
+                      ? collectionsQuery.isLoading
+                      : i === 1
+                        ? freeformModelsQuery.isLoading
+                        : i === 2
+                          ? freeformBackdropsAndSymbols.isLoadingBackdrops
+                          : freeformSymbolsQuery.isLoading
 
                   return (
                     <GiftFieldButton

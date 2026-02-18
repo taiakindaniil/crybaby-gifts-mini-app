@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import useApi from '@/api/hooks/useApi';
 
-export const useGifts = () => {
+export const useGifts = (opts?: { enabled?: boolean }) => {
   const api = useApi();
+  const enabled = opts?.enabled ?? true
   return useQuery({
     queryKey: ['gifts'],
+    enabled,
     queryFn: async () => {
         const res = await api.get('/proxy/changes-tg/gifts');
         return res.data;
@@ -25,10 +27,12 @@ export const useModels = (giftName: string) => {
   })
 }
 
-export const useBackgrounds = () => {
+export const useBackgrounds = (opts?: { enabled?: boolean }) => {
   const api = useApi();
+  const enabled = opts?.enabled ?? true
   return useQuery({
     queryKey: ['backgrounds'],
+    enabled,
     queryFn: async () => {
         const res = await api.get('/proxy/changes-tg/backdrops?sort=asc');
         return res.data;

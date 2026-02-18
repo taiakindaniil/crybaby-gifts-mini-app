@@ -14,12 +14,12 @@ export type GiftCollectionResponse = {
   gifts: GiftItem[]
 }
 
-export const useGiftCollection = (giftName?: string) => {
+export const useGiftCollection = (giftName?: string, enabled = true) => {
   const api = useApi()
 
   return useQuery<GiftCollectionResponse>({
     queryKey: ['gift-collection', giftName],
-    enabled: !!giftName,
+    enabled: enabled && !!giftName,
     queryFn: async () => {
       const editedGiftName = giftName!.replace(/[\s'-]+/g, '').toLowerCase()
 
