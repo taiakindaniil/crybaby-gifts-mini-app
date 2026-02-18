@@ -33,6 +33,11 @@ export const useDrawerItems = ({
   return useMemo(() => {
     if (!editingFieldKey) return []
 
+    // В constructor режиме эти поля заполняются из API конструктора в GiftDrawer
+    if (mode === 'constructor' && ['gifts', 'model', 'background', 'pattern'].includes(editingFieldKey)) {
+      return []
+    }
+
     // GIFTS
     if (editingFieldKey === 'gifts') {
       return (

@@ -18,8 +18,9 @@ import { Spinner } from '../ui/spinner'
 import { useBackgrounds, useGifts } from '@/hooks/useGiftQueries'
 import { useGiftCollection, type GiftCollectionResponse } from '@/hooks/useGiftCollection'
 import { buildGiftTree } from '@/lib/buildGiftTree'
-import { buildGiftModelUrl } from '@/lib/giftUrls'
+import { buildGiftModelUrl, buildGiftPatternUrl } from '@/lib/giftUrls'
 import apiClient from '@/api/apiClient'
+import { useConstructorState } from '@/hooks/useConstructorState'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useDrawerItems, type DrawerItem } from '@/hooks/useDrawerItems'
 import { GiftPreview } from './GiftPreview'
@@ -111,6 +112,71 @@ export const GiftDrawer: FC = () => {
     if (!collectionData?.gifts) return {}
     return buildGiftTree(collectionData.gifts)
   }, [collectionData])
+
+  const isConstructorModeActive = constructorMode === 'constructor'
+  const constructorState = useConstructorState({
+    selectedGift: selectedCell?.gift,
+    isConstructorMode: isConstructorModeActive,
+    isDrawerOpen: !!selectedCell,
+  })
+
+  useEffect(() => {
+    if (!isConstructorModeActive || !constructorState.error) return
+    const err = constructorState.error as { response?: { status?: number } }
+    if (err?.response?.status === 404) return
+    toast(t('common.error'), {
+      description: constructorState.error?.message ?? t('toast.errorUpdateGift'),
+    })
+  }, [isConstructorModeActive, constructorState.error, t])
+
+  // Constructor-mode drawer items (from new API)
+  const constructorDrawerItems = useMemo(() => {
+    if (!isConstructorModeActive || !editingFieldKey) return []
+    const {
+      collections,
+      models,
+      backdrops,
+      symbols,
+    } = constructorState
+    const collection = selectedCell?.gift?.name
+
+    if (editingFieldKey === 'gifts') {
+      return collections.map((name, id) => ({
+        id,
+        title: name,
+        image: buildGiftModelUrl(name, 'Original'),
+      }))
+    }
+    if (editingFieldKey === 'model' && collection) {
+      return models.map((name, id) => ({
+        id,
+        title: name,
+        image: buildGiftModelUrl(collection, name),
+      }))
+    }
+    if (editingFieldKey === 'background' && collection && selectedCell?.gift?.model) {
+      return backdrops.map((backdropName, id) => ({
+        id,
+        title: backdropName,
+        background: backgrounds?.find((bg: GiftBackground) => bg.name === backdropName),
+      }))
+    }
+    if (editingFieldKey === 'pattern' && collection) {
+      return symbols.map((symbolName, id) => ({
+        id: id,
+        title: symbolName,
+        pattern: buildGiftPatternUrl(collection, symbolName),
+      }))
+    }
+    return []
+  }, [
+    isConstructorModeActive,
+    editingFieldKey,
+    constructorState,
+    selectedCell?.gift?.name,
+    selectedCell?.gift?.model,
+    backgrounds,
+  ])
 
   // Парсинг поискового запроса для коллекций
   const parsedQuery = useMemo(() => {
@@ -260,15 +326,48 @@ export const GiftDrawer: FC = () => {
     mode: constructorMode,
   })
 
-  const handleSelect = (item: DrawerItem) => {
+  const searchDrawerItems =
+    isConstructorModeActive && editingFieldKey ? constructorDrawerItems : drawerItems
+
+  const handleSelect = async (item: DrawerItem) => {
     if (!isOwnProfile) return
     if (!editingFieldKey) return
+
+    if (isConstructorModeActive && editingFieldKey === 'pattern') {
+      const collection = selectedCell?.gift?.name
+      const model = selectedCell?.gift?.model
+      const backdrop = selectedCell?.gift?.background?.name
+      if (!collection || !model || !backdrop || !selectedCell) return
+      try {
+        const result = await constructorState.fetchGift(item.title)
+        const background = backgrounds?.find((bg: GiftBackground) => bg.name === result.backdrop)
+        const updatedGift: Gift = {
+          id: result.gift_number,
+          name: collection,
+          model: result.model,
+          background: background,
+          pattern: result.symbol,
+        }
+        useGiftStore.setState({
+          selectedCell: {
+            ...selectedCell,
+            gift: updatedGift,
+          },
+        })
+        setEditingFieldKey(null)
+      } catch (err: unknown) {
+        const is404 = err && typeof err === 'object' && 'response' in err && (err as { response?: { status?: number } }).response?.status === 404
+        toast(t('common.error'), {
+          description: is404 ? t('giftDrawer.errorCombinationNotFound') : t('toast.errorUpdateGift'),
+        })
+      }
+      return
+    }
 
     if (editingFieldKey === 'background') {
       selectField('background', item.title, { background: item.background }, constructorMode)
     } else if (editingFieldKey === 'pattern') {
       selectField('pattern', item.title, undefined, constructorMode)
-      // В режиме constructor присваиваем id, в freeform - нет
       if (constructorMode === 'constructor' && item.id !== undefined) {
         selectField('id', String(item.id), undefined, constructorMode)
       }
@@ -451,7 +550,17 @@ export const GiftDrawer: FC = () => {
 
               <div className="bg-card/50 mx-4 divide-y divide-border rounded-xl border border-solid border-border overflow-hidden">
                 {giftFields.map((field, i) => {
-                  const fieldLoading = i === 0 ? giftsLoading : giftCollectionLoading
+                  const fieldLoading = isConstructorModeActive
+                    ? (i === 0
+                        ? constructorState.isLoadingCollections
+                        : i === 1
+                          ? constructorState.isLoadingModels
+                          : i === 2
+                            ? constructorState.isLoadingBackdrops
+                            : constructorState.isLoadingSymbols)
+                    : i === 0
+                      ? giftsLoading
+                      : giftCollectionLoading
 
                   return (
                     <GiftFieldButton
@@ -521,7 +630,7 @@ export const GiftDrawer: FC = () => {
             }
           }}
           title={editingFieldKey ? t(getGiftFieldLabelKey(editingFieldKey)) : ''}
-          items={drawerItems
+          items={searchDrawerItems
             .map((item) => ({
               ...item,
               id: String(item.id),

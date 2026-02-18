@@ -83,6 +83,7 @@ export const ru = {
     deleteAlbum: 'Удалить альбом',
     deleteAlbumTitle: 'Удалить альбом?',
     deleteAlbumMessage: 'После удаления восстановить альбом будет нельзя.',
+    errorCombinationNotFound: 'Такая комбинация не найдена',
   },
   dialogs: {
     createNewAlbum: 'Новый альбом',

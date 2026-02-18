@@ -83,6 +83,7 @@ export const en = {
     deleteAlbum: 'Delete Album',
     deleteAlbumTitle: 'Delete album of nfts?',
     deleteAlbumMessage: "If you delete this album, you won't be able restore it.",
+    errorCombinationNotFound: 'This combination was not found',
   },
   dialogs: {
     createNewAlbum: 'Create New Album',
