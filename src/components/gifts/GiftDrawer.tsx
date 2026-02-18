@@ -426,6 +426,7 @@ export const GiftDrawer: FC = () => {
           model: result.model,
           background: background,
           pattern: result.symbol,
+          url: result.url,
         }
         useGiftStore.setState({
           selectedCell: {

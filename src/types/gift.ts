@@ -19,6 +19,8 @@ export type Gift = {
     model?: string
     background?: GiftBackground
     pattern?: string
+    /** URL из API (например https://t.me/nft/durovscap-417) для кнопки «Открыть в Telegram» */
+    url?: string
 }
 
 import { buildGiftLottieUrl } from '@/lib/giftUrls'

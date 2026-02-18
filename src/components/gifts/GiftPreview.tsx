@@ -25,7 +25,7 @@ export const GiftPreview: FC<GiftPreviewProps> = ({ gift, onDelete }) => {
 
   const hasPattern = !!gift.pattern
   const patternUrl = gift.pattern ? buildGiftPatternUrl(gift.name, gift.pattern) : null
-  const telegramUrl = gift.id > 0 ? buildTelegramGiftUrl(gift.name, gift.id) : null
+  const telegramUrl = gift.url ?? (gift.id > 0 ? buildTelegramGiftUrl(gift.name, gift.id) : null)
 
   return (
     <div
