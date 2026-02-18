@@ -75,6 +75,7 @@ export const PatternBackground: React.FC<PatternBackgroundProps> = ({
             backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
+            filter: 'brightness(0)',
             opacity: item.opacity,
             pointerEvents: 'none',
           }}
