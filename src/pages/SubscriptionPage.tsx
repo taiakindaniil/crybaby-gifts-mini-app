@@ -4,7 +4,7 @@ import { Page } from '@/components/Page'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
 import { Link } from 'react-router-dom'
 import { Spinner } from '@/components/ui/spinner'
-import { BadgeCheckIcon, EyeOff, Sparkles, GalleryThumbnails } from 'lucide-react'
+import { BadgeCheckIcon, Eye, Sparkles, GalleryThumbnails } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 // import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
 // import { BadgeCheckIcon, ChevronRightIcon, MessageSquare } from 'lucide-react'
@@ -43,10 +43,10 @@ export const SubscriptionPage: FC = () => {
       icon: <GalleryThumbnails className="size-5 text-blue-500" />,
     },
     {
-      title: t('subscription.hiddenCollections'),
-      description: t('subscription.hiddenCollectionsDesc'),
+      title: t('subscription.profileViews'),
+      description: t('subscription.profileViewsDesc'),
       link: '/subscription',
-      icon: <EyeOff className="size-5 text-blue-500" />,
+      icon: <Eye className="size-5 text-blue-500" />,
     },
     {
       title: t('subscription.moreSoon'),
