@@ -19,6 +19,8 @@ export type Gift = {
     model?: string
     background?: GiftBackground
     pattern?: string
+    /** Коллекция узора (для freeform: узор из другой коллекции). Если задано — по ней строится URL картинки узора. */
+    patternCollection?: string
     /** URL из API (например https://t.me/nft/durovscap-417) для кнопки «Открыть в Telegram» */
     url?: string
 }

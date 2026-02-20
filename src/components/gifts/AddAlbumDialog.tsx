@@ -1,5 +1,5 @@
 // src/components/gifts/AddAlbumDialog.tsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useState } from 'react'
@@ -46,9 +46,9 @@ export const AddAlbumDialog = ({ open, onOpenChange }: AddAlbumDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] bg-background/50 backdrop-blur-md rounded-3xl border-border">
+      <DialogContent ariaTitle={t('dialogs.createNewAlbum')} className="sm:max-w-[400px] bg-background/50 backdrop-blur-md rounded-3xl border-border">
         <DialogHeader>
-          <DialogTitle>{t('dialogs.createNewAlbum')}</DialogTitle>
+          <p className="text-lg leading-none font-semibold">{t('dialogs.createNewAlbum')}</p>
         </DialogHeader>
         <Input
           placeholder={t('dialogs.albumName')}

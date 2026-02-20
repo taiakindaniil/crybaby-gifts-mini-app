@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useState, useEffect } from 'react'
@@ -64,9 +64,9 @@ export const EditBioDialog = ({ open, onOpenChange, currentBio = '', onBioUpdate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] bg-background/50 backdrop-blur-md rounded-3xl border-border">
+      <DialogContent ariaTitle={t('profile.editBio')} className="sm:max-w-[400px] bg-background/50 backdrop-blur-md rounded-3xl border-border">
         <DialogHeader>
-          <DialogTitle>{t('profile.editBio')}</DialogTitle>
+          <p className="text-lg leading-none font-semibold">{t('profile.editBio')}</p>
         </DialogHeader>
         <div className="space-y-2">
           <Textarea

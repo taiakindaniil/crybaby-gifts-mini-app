@@ -40,7 +40,7 @@ export const GiftCard: FC<Props> = ({
       <div className="relative h-full w-full flex items-center justify-center overflow-hidden rounded-lg">
         {gift && <>
           {gift?.pattern && <PatternBackground
-            image={buildGiftPatternUrl(gift.name, gift.pattern)}
+            image={buildGiftPatternUrl(gift.patternCollection ?? gift.name, gift.pattern)}
           /> }
 
           <div className="absolute inset-0 opacity-[0.03]">

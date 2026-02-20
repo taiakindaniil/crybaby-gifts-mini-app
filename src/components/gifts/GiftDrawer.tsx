@@ -10,7 +10,7 @@ import { useGiftStore, giftFields } from '@/stores/giftStore'
 import { useTranslation, getGiftFieldLabelKey } from '@/i18n'
 import { SearchDrawer } from '../search/SearchDrawer'
 import { useMutation, useQueryClient, useQuery, useQueries } from '@tanstack/react-query'
-import { getConstructorCollections, getConstructorModels, getConstructorCollectionAllSymbols } from '@/api/constructor'
+import { getConstructorCollections, getConstructorModels, getConstructorAllSymbolsWithUrls } from '@/api/constructor'
 import { updateGiftCell, togglePinGift, getGrids, type Grid } from '@/api/gifts'
 import { retrieveLaunchParams } from '@telegram-apps/sdk-react'
 import { Pin } from 'lucide-react'
@@ -18,7 +18,7 @@ import { toast } from 'sonner'
 import { Spinner } from '../ui/spinner'
 import { useBackgrounds } from '@/hooks/useGiftQueries'
 import type { GiftCollectionResponse } from '@/hooks/useGiftCollection'
-import { buildGiftModelUrl, buildGiftPatternUrl } from '@/lib/giftUrls'
+import { buildGiftModelUrl, buildGiftPatternUrl, proxyImageUrl } from '@/lib/giftUrls'
 import apiClient from '@/api/apiClient'
 import { useConstructorState } from '@/hooks/useConstructorState'
 import { useFreeformBackdropsAndSymbols } from '@/hooks/useFreeformBackdropsAndSymbols'
@@ -134,16 +134,16 @@ export const GiftDrawer: FC = () => {
     return Array.isArray(d) ? d : []
   }, [freeformModelsQuery.data])
 
-  const freeformSymbolsQuery = useQuery({
-    queryKey: ['constructor', 'collection-all-symbols', giftName],
-    queryFn: () => getConstructorCollectionAllSymbols(giftName!),
-    enabled: legacyEnabled && !!giftName,
+  const freeformAllSymbolsQuery = useQuery({
+    queryKey: ['constructor', 'all-symbols-with-urls'],
+    queryFn: getConstructorAllSymbolsWithUrls,
+    enabled: legacyEnabled && !!selectedCell,
     staleTime: 1000 * 60 * 60 * 24,
   })
-  const freeformSymbols = useMemo(() => {
-    const d = freeformSymbolsQuery.data
+  const freeformAllSymbols = useMemo(() => {
+    const d = freeformAllSymbolsQuery.data
     return Array.isArray(d) ? d : []
-  }, [freeformSymbolsQuery.data])
+  }, [freeformAllSymbolsQuery.data])
 
   const giftTree = useMemo(() => ({}), [])
 
@@ -215,7 +215,7 @@ export const GiftDrawer: FC = () => {
     backgrounds,
   ])
 
-  // Freeform-mode drawer items: model (.../models), background (.../backdrops), pattern (.../all-symbols по коллекции)
+  // Freeform-mode drawer items: model (.../models), background (.../backdrops), pattern (all symbols with URLs)
   const freeformDrawerItems = useMemo(() => {
     if (isConstructorModeActive || !editingFieldKey) return []
     const { backdrops } = freeformBackdropsAndSymbols
@@ -235,11 +235,12 @@ export const GiftDrawer: FC = () => {
         background: backgrounds?.find((bg: GiftBackground) => bg.name === backdropName),
       }))
     }
-    if (editingFieldKey === 'pattern' && collectionName) {
-      return freeformSymbols.map((symbolName) => ({
-        id: 0,
-        title: symbolName,
-        pattern: buildGiftPatternUrl(collectionName, symbolName),
+    if (editingFieldKey === 'pattern') {
+      return freeformAllSymbols.map((s) => ({
+        id: `${s.collection}\u001f${s.name}`,
+        title: s.name,
+        pattern: proxyImageUrl(s.url),
+        symbolCollection: s.collection,
       }))
     }
     return []
@@ -248,7 +249,7 @@ export const GiftDrawer: FC = () => {
     editingFieldKey,
     freeformBackdropsAndSymbols,
     freeformModels,
-    freeformSymbols,
+    freeformAllSymbols,
     selectedCell?.gift?.name,
     backgrounds,
   ])
@@ -447,7 +448,11 @@ export const GiftDrawer: FC = () => {
     if (editingFieldKey === 'background') {
       selectField('background', item.title, { background: item.background }, constructorMode)
     } else if (editingFieldKey === 'pattern') {
-      selectField('pattern', item.title, undefined, constructorMode)
+      const patternExtra =
+        !isConstructorModeActive && item.symbolCollection
+          ? { patternCollection: item.symbolCollection }
+          : undefined
+      selectField('pattern', item.title, patternExtra, constructorMode)
       if (constructorMode === 'constructor' && item.id !== undefined) {
         selectField('id', String(item.id), undefined, constructorMode)
       }
@@ -644,7 +649,7 @@ export const GiftDrawer: FC = () => {
                         ? freeformModelsQuery.isLoading
                         : i === 2
                           ? freeformBackdropsAndSymbols.isLoadingBackdrops
-                          : freeformSymbolsQuery.isLoading
+                          : freeformAllSymbolsQuery.isLoading
 
                   return (
                     <GiftFieldButton

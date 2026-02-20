@@ -11,6 +11,8 @@ export type DrawerItem = {
   pattern?: string
   url?: string
   gift_number?: number
+  /** Collection of the symbol (for freeform pattern from all-symbols). */
+  symbolCollection?: string
 }
 
 type UseDrawerItemsParams = {

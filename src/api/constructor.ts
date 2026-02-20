@@ -79,3 +79,17 @@ export const getConstructorCollectionAllSymbols = async (collection: string): Pr
   )
   return toArray(data, 'symbols')
 }
+
+export type ConstructorSymbolWithUrl = {
+  name: string
+  collection: string
+  url: string
+}
+
+/** All unique (collection, symbol) pairs with image URLs (for freeform mode). */
+export const getConstructorAllSymbolsWithUrls = async (): Promise<ConstructorSymbolWithUrl[]> => {
+  const { data } = await apiClient.get<{ symbols: ConstructorSymbolWithUrl[] }>(
+    '/constructor/all-symbols-with-urls'
+  )
+  return Array.isArray(data?.symbols) ? data.symbols : []
+}

@@ -61,6 +61,7 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
               name: value,
               model: undefined,
               pattern: undefined,
+              patternCollection: undefined,
               background: undefined,
               // В freeform режиме id всегда 0
               id: mode === 'freeform' ? 0 : (state.selectedCell.gift.id ?? 0),
@@ -83,6 +84,7 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
           model: value,
           background: undefined,
           pattern: undefined,
+          patternCollection: undefined,
           // В freeform режиме id всегда 0
           id: mode === 'freeform' ? 0 : (state.selectedCell.gift.id ?? 0),
         }
@@ -104,15 +106,21 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
           ...state.selectedCell.gift,
           background,
           pattern: undefined,
+          patternCollection: undefined,
           // В freeform режиме id всегда 0
           id: mode === 'freeform' ? 0 : (state.selectedCell.gift.id ?? 0),
         }
       }
 
       if (state.selectedCell?.gift && key.toString() === 'pattern') {
+        const patternCollection =
+          typeof extra === 'object' && extra !== null && 'patternCollection' in extra
+            ? (extra as { patternCollection?: string }).patternCollection
+            : undefined
         updatedGift = {
           ...state.selectedCell.gift,
           pattern: value,
+          patternCollection,
           // В freeform режиме id всегда 0, в constructor сохраняем текущий id
           id: mode === 'freeform' ? 0 : (state.selectedCell.gift.id ?? 0),
         }

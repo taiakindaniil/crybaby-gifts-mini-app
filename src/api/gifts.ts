@@ -51,8 +51,18 @@ export const getGrids = async (userId: number): Promise<Grid[]> => {
           
           // Если cell уже имеет структуру Cell с полем gift
           if (cell && 'gift' in cell) {
+            const g = cell.gift
+            const gift: Gift | null = g ? {
+              id: g.id,
+              name: g.name,
+              model: g.model,
+              background: g.background,
+              pattern: g.pattern,
+              patternCollection: g.patternCollection ?? (g as Gift & { pattern_collection?: string }).pattern_collection,
+              url: g.url
+            } : null
             return {
-              gift: cell.gift || null,
+              gift,
               pinned: cell.pinned || false,
               pinned_position: cell.pinned_position ?? null
             };
@@ -69,7 +79,9 @@ export const getGrids = async (userId: number): Promise<Grid[]> => {
             name: cell.name,
             model: cell.model,
             background: cell.background,
-            pattern: cell.pattern
+            pattern: cell.pattern,
+            patternCollection: cell.patternCollection ?? cell.pattern_collection,
+            url: cell.url
           };
           
           return {
