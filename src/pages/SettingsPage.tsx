@@ -40,7 +40,7 @@ export const SettingsPage: FC = () => {
         {
           title: t('settings.contactSupport'),
           icon: <MessageSquare className="p-1 size-6 bg-[orange] rounded-sm text-white" />,
-          link: 'https://t.me/GiftOutfit',
+          link: 'https://t.me/GiftOutfit?direct',
           external: true,
         },
         {
