@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useSignal, isMiniAppDark, retrieveLaunchParams } from '@telegram-apps/sdk-react'
 import { Layout } from './Layout'
 
@@ -8,15 +8,11 @@ import { I18nProvider } from '@/i18n'
 import { routes } from '@/navigation/routes'
 import { LoadingScreen } from './LoadingScreen'
 import { parseProfileUserIdFromStartParam } from '@/lib/parseDeeplink'
-// import { parseProfileUserIdFromStartParam } from '@/lib/parseDeeplink'
 
 function AppRoutes() {
   const navigate = useNavigate();
-  const location = useLocation();
   const launchParams = retrieveLaunchParams();
-  // const currentUser = launchParams.tgWebAppData?.user;
   const startParam = launchParams.tgWebAppStartParam;
-  // const hasProcessedNavigation = useRef(false);
 
   useEffect(() => {
     if (startParam) {
@@ -26,42 +22,6 @@ function AppRoutes() {
       }
     }
   }, []);
-  //   // Перенаправляем только один раз при монтировании
-  //   if (hasProcessedNavigation.current) {
-  //     return;
-  //   }
-    
-  //   // hasProcessedNavigation.current = true;
-    
-  //   // Если URL уже содержит /profile, не перенаправляем
-  //   if (location.pathname.includes('/profile/')) {
-  //     return;
-  //   }
-    
-  //   // Если есть startParam с profile userId (из deeplink)
-  //   if (startParam) {
-  //     const targetUserId = parseProfileUserIdFromStartParam(startParam);
-      
-  //     if (targetUserId) {
-  //       // Если это не текущий пользователь, перенаправляем на его профиль
-  //       if (!currentUser || currentUser.id !== targetUserId) {
-  //         navigate(`/profile/${targetUserId}`, { replace: true });
-  //         return;
-  //       }
-  //       // Если это текущий пользователь, перенаправляем на /portfolio
-  //       navigate('/portfolio', { replace: true });
-  //       return;
-  //     }
-  //   }
-    
-  //   // Если нет startParam или это не profile, перенаправляем на /portfolio
-  //   if (location.pathname !== '/portfolio' && location.pathname !== '/') {
-  //     navigate('/portfolio', { replace: true });
-  //   } else if (location.pathname === '/') {
-  //     navigate('/portfolio', { replace: true });
-  //   }
-  // }, []);
-  
 
   return (
     <Routes>

@@ -123,6 +123,9 @@ export const IndexPage: FC = () => {
           <div>
             {t('footer.developer')}: <a href="https://t.me/dnevnik_ton" className="text-primary">@dnevnik_ton</a>
           </div>
+          <div>
+            {t('footer.parserDeveloper')}: <a href="https://t.me/neuralytix" className="text-primary">@neuralytix</a>
+          </div>
         </div>
 
         <GiftDrawer />

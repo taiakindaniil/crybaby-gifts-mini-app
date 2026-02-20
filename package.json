@@ -1,8 +1,9 @@
 {
-  "name": "gift-index-mini-app",
-  "private": true,
-  "version": "0.0.0",
+  "name": "giftoutfit-mini-app",
+  "version": "1.0.0",
+  "description": "Telegram Mini App for planning your gifts",
   "type": "module",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

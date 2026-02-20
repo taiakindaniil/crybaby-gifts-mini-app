@@ -119,6 +119,7 @@ export const ru = {
     and: 'и',
     forApi: 'за API',
     developer: 'Разработчик',
+    parserDeveloper: 'Разработчик парсера данных',
   },
   search: {
     placeholder: 'Поиск...',

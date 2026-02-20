@@ -119,6 +119,7 @@ export const en = {
     and: 'and',
     forApi: 'for API',
     developer: 'Developer',
+    parserDeveloper: 'Data parser developer',
   },
   search: {
     placeholder: 'Search...',
